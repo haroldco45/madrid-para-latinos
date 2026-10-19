@@ -1103,4 +1103,680 @@ let curSit=null;
 function renderSits(){
   $('#sits').innerHTML = SITS.map(s=>`<button class="sit ${curSit===s.id?'on':''}" onclick="openSit('${s.id}')"><span class="em">${s.ic}</span><b>${L(s.n)}</b></button>`).join('');
   $('#pocket').innerHTML = POCKET.map((p,i)=>`<div class="pk"><div><div class="en">${esc(p[0])}</div><div class="es">${esc(LANG==='es'?p[1]:p[2])}</div></div><button class="say" onclick="speak(POCKET[${i}][0])">🔊</button></div>`).join('');
-  $('#slang').innerHTML = `<tr><th>${L({es:'En España',en:'In Spain'})}</th><th style="tex
+  $('#slang').innerHTML = `<tr><th>${L({es:'En España',en:'In Spain'})}</th><th style="text-align:right">${L({es:'En Latinoamérica',en:'Meaning'})}</th></tr>` + SLANG.map((s,i)=>`<tr><td><b>${esc(s[0])}</b> <button class="say" style="width:26px;height:26px;font-size:.7rem" onclick="speak(SLANG[${i}][0])">🔊</button></td><td style="font-weight:400;text-align:right">${esc(LANG==='es'?s[1]:s[2])}</td></tr>`).join('');
+  if(curSit) openSit(curSit,true);
+}
+function openSit(id,silent){
+  curSit=id; const s=SITS.find(x=>x.id===id);
+  document.querySelectorAll('.sit').forEach((b,i)=>b.classList.toggle('on',SITS[i].id===id));
+  $('#dlg-wrap').style.display='block';
+  $('#dlg-title').textContent = s.ic+' '+L(s.n);
+  $('#dlg-ctx').textContent = L(s.ctx);
+  const who = {A:{es:'Ellos',en:'Them'},B:{es:'Tú',en:'You'}};
+  $('#dlg').innerHTML = s.l.map((x,i)=>`<div class="bub ${x[0]}"><div class="head"><div><div class="who">${L(who[x[0]])}</div><div class="en">${esc(x[1])}</div></div><button class="say" onclick="speak(SITS.find(s=>s.id==='${id}').l[${i}][1])">🔊</button></div>${LANG==='es' ? (x[2]?`<div class="es">🇨🇴 ${L({es:'En casa',en:'Back home'})}: ${esc(x[2])}</div>`:'') : `<div class="es">${esc(x[3])}</div>`}</div>`).join('');
+  $('#dlg-tips').innerHTML = '💡 '+esc(L(s.tip));
+  if(!silent) $('#dlg-wrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+let voice=null;
+function pickVoice(){ const vs=speechSynthesis.getVoices(); voice = vs.find(v=>v.lang==='es-ES'&&/Monica|Mónica|Lucia|Lucía|Google español$|Helena|Laura/i.test(v.name)) || vs.find(v=>v.lang==='es-ES') || vs.find(v=>/^es/.test(v.lang)) || null; }
+if('speechSynthesis' in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+function utter(text){ const u=new SpeechSynthesisUtterance(text); u.lang='es-ES'; if(voice) u.voice=voice; u.rate=+$('#rate').value||.9; return u; }
+function speak(text){
+  if(!('speechSynthesis' in window)){ toast(L({es:'Tu navegador no tiene voz',en:'No speech support'})); return; }
+  speechSynthesis.cancel(); const u=utter(text); speechSynthesis.speak(u); return u;
+}
+function playAll(){
+  const s=SITS.find(x=>x.id===curSit); if(!s||!('speechSynthesis' in window)) return; speechSynthesis.cancel(); let i=0;
+  const next=()=>{ if(i>=s.l.length) return; const u=utter(s.l[i][1]); u.onend=()=>{i++; setTimeout(next,350);}; speechSynthesis.speak(u); };
+  next();
+}
+
+/* ---------- SOS ---------- */
+const ORGS = [
+ {ic:'🇨🇴',n:'Consulado de Colombia en Madrid',d:{es:'Calle de Alfonso XI, 6. Pasaporte perdido, registro civil, poderes, Registro Consular, asistencia a colombianos detenidos o en emergencia. Lunes a viernes 8:30–13:30 con cita.',en:'Lost passports, civil registry, powers of attorney, help for Colombians in emergencies. Mon–Fri by appointment.'},tel:[['91 745 25 90','+34917452590']],web:'https://madrid.consulado.gov.co',mail:'cmadrid@cancilleria.gov.co'},
+ {ic:'❤️',n:'Cruz Roja',d:{es:'Acogida, ayuda humanitaria, empleo y orientación para personas migrantes. Atención a la ciudadanía gratis.',en:'Reception, humanitarian aid, jobs and guidance for migrants. Free helpline.'},tel:[['900 22 11 22','+34900221122']],web:'https://www.cruzroja.es'},
+ {ic:'🌍',n:'CEAR — Comisión Española de Ayuda al Refugiado',d:{es:'Asilo y protección internacional: asesoría jurídica, acogida y empleo.',en:'Asylum and international protection: legal advice, reception, jobs.'},web:'https://www.cear.es'},
+ {ic:'🤝',n:'Accem',d:{es:'Acogida, asesoría legal, empleo y clases para migrantes y solicitantes de asilo.',en:'Reception, legal advice, jobs and classes for migrants and asylum seekers.'},web:'https://www.accem.es'},
+ {ic:'🏠',n:'Cáritas Madrid',d:{es:'Acogida y ayuda básica a través de las parroquias de cada barrio, empleo y asesoría.',en:'Basic aid via local parishes, jobs and advice.'},web:'https://www.caritasmadrid.org'},
+ {ic:'🌱',n:'Fundación Cepaim',d:{es:'Integración de personas migrantes: empleo, vivienda y orientación.',en:'Migrant integration: jobs, housing, guidance.'},web:'https://www.cepaim.org'},
+ {ic:'🫂',n:'Asociación Rumiñahui',d:{es:'Asociación de migrantes latinoamericanos: orientación, formación y acompañamiento.',en:'Latin American migrants\' association: guidance and training.'},web:'https://www.ruminahui.org'},
+ {ic:'⚖️',n:'Colegio de la Abogacía de Madrid (ICAM)',d:{es:'Servicio de orientación jurídica gratuita, también para extranjería. Si te detienen, tienes derecho a abogado de oficio gratis.',en:'Free legal guidance, including immigration. Free duty lawyer if detained.'},web:'https://www.icam.es'},
+ {ic:'⛓️',n:'Policía Nacional — Línea contra la trata',d:{es:'Si te retienen el pasaporte, te obligan a trabajar o a prostituirte. Gratis, confidencial, 24 h.',en:'Trafficking or forced labour. Free, confidential, 24/7.'},tel:[['900 10 50 90','+34900105090']]},
+ {ic:'💜',n:'016 — Violencia contra las mujeres',d:{es:'Gratis, 24 h, en varios idiomas. No aparece en la factura del teléfono.',en:'Free, 24/7, several languages. Not shown on your phone bill.'},tel:[['016','016']]},
+ {ic:'🫂',n:'Teléfono de la Esperanza',d:{es:'Si te sientes solo, triste o desbordado lejos de casa. 24 h.',en:'If you feel lonely or overwhelmed. 24/7.'},tel:[['717 003 717','+34717003717']],web:'https://telefonodelaesperanza.org'}
+];
+const SOSACC = [
+ {t:{es:'🛂 Perdí el pasaporte',en:'🛂 I lost my passport'},b:{es:'<ol><li>Pon la denuncia en una comisaría (o empiézala en policia.es) y guarda la copia.</li><li>Pide cita en tu consulado (Colombia: madrid.consulado.gov.co) para el pasaporte nuevo o de emergencia.</li><li>Si tenías TIE, sigue siendo válida: guárdala bien.</li><li>Tip: guarda desde ya una foto del pasaporte y la TIE en tu correo.</li></ol>',en:'<ol><li>Report it to the police and keep the copy.</li><li>Book your consulate for a new or emergency passport.</li><li>Keep a photo of your documents in your email.</li></ol>'}},
+ {t:{es:'📱 Me robaron el móvil',en:'📱 My phone was stolen'},b:{es:'<ol><li>Desde otro dispositivo, bloquéalo: Buscar mi iPhone o Encontrar mi dispositivo (Google).</li><li>Llama a tu compañía para bloquear la SIM.</li><li>Pon la denuncia con el número IMEI (está en la caja).</li><li>Cambia contraseñas del correo, el banco y WhatsApp.</li></ol>',en:'<ol><li>Lock it remotely.</li><li>Block the SIM.</li><li>Report it with the IMEI.</li><li>Change passwords.</li></ol>'}},
+ {t:{es:'🤒 Me enfermé',en:'🤒 I got sick'},b:{es:'<ul class="dots"><li><b>Leve:</b> farmacia, sin cita.</li><li><b>No urgente:</b> tu centro de salud (médico de cabecera).</li><li><b>Urgente:</b> urgencias del hospital o centro de urgencias extrahospitalarias (ver el mapa).</li><li><b>Grave</b> (dolor de pecho, no respira, sangrado fuerte): 112.</li><li>En urgencias te atienden aunque no tengas tarjeta sanitaria. Si eres turista, viaja con seguro médico.</li></ul>',en:'<ul class="dots"><li>Minor: pharmacy.</li><li>Non-urgent: health centre.</li><li>Urgent: A&E.</li><li>Serious: 112.</li></ul>'}},
+ {t:{es:'👮 Me paró la policía',en:'👮 Police stopped me'},b:{es:'<ul class="dots"><li>En España la policía puede pedirte identificación: lleva el pasaporte, la TIE o una fotocopia.</li><li>Mantén la calma y sé educado.</li><li>Si te detienen, tienes derecho a un <b>abogado de oficio gratis</b>, a un intérprete si lo necesitas, a avisar a un familiar y a tu consulado.</li><li>No firmes nada que no entiendas.</li></ul>',en:'<ul class="dots"><li>Police may ask for ID: carry your passport/TIE or a copy.</li><li>If detained: free duty lawyer, interpreter, and consular contact.</li><li>Don\'t sign what you don\'t understand.</li></ul>'}},
+ {t:{es:'💸 No me pagan / me explotan',en:'💸 Unpaid or exploited at work'},b:{es:'<ul class="dots"><li>Anota horas, fechas y pagos; guarda mensajes y audios.</li><li>Pide orientación gratis a los sindicatos (CCOO y UGT tienen servicios para trabajadores extranjeros) o a una ONG.</li><li>Puedes denunciar ante la Inspección de Trabajo; también existe un buzón para avisar sin dar tu nombre.</li><li>Si te retienen el pasaporte o te amenazan: 900 10 50 90 (24 h).</li></ul>',en:'<ul class="dots"><li>Keep records. Unions (CCOO, UGT) and NGOs advise for free. Labour Inspectorate accepts anonymous tips. Trafficking line 900 10 50 90.</li></ul>'}},
+ {t:{es:'🏚️ Me quedé sin dónde dormir',en:'🏚️ I have nowhere to sleep'},b:{es:'<ul class="dots"><li>El <b>SAMUR Social</b> del Ayuntamiento atiende emergencias sociales: pide ayuda por el 112 o el 010.</li><li>Cruz Roja (900 22 11 22) y Cáritas orientan sobre albergues.</li><li>Si corres peligro, llama al 112.</li></ul>',en:'<ul class="dots"><li>SAMUR Social handles social emergencies — ask via 112 or 010. Red Cross and Cáritas know shelters.</li></ul>'}},
+ {t:{es:'📄 Dudas de papeles',en:'📄 Immigration questions'},b:{es:'<ul class="dots"><li>Información oficial: <b>extranjeros.inclusion.gob.es</b> y cita en <b>sede.administracionespublicas.gob.es</b>.</li><li>Asesórate con abogados colegiados u ONG (CEAR, Accem, Cruz Roja, Cáritas). Muchas lo hacen gratis.</li><li>⚠️ Nunca pagues por una cita ni a "gestores" que prometen papeles rápidos: es la estafa más común contra latinos.</li><li>Mira el módulo <a href="javascript:go(\'papers\')">Papeles</a> de esta app.</li></ul>',en:'<ul class="dots"><li>Official info at extranjeros.inclusion.gob.es. Use registered lawyers or NGOs. Never pay for appointments.</li></ul>'}}
+];
+function renderSOS(){
+  $('#orgs').innerHTML = ORGS.map(o=>`<div class="org"><div class="ic">${o.ic}</div><div style="flex:1;min-width:0"><b>${esc(o.n)}</b><div class="small muted">${esc(L(o.d))}</div><div class="acts">${(o.tel||[]).map(t=>`<a class="btn sm red" style="color:#fff" href="tel:${t[1]}">📞 ${esc(t[0])}</a>`).join('')}${o.web?`<a class="btn sm ghost" href="${o.web}" target="_blank" rel="noopener">🌐 Web</a>`:''}${o.mail?`<a class="btn sm ghost" href="mailto:${o.mail}">✉️</a>`:''}</div></div></div>`).join('');
+  renderAcc($('#sos-acc'),SOSACC);
+}
+
+/* ---------- Papeles ---------- */
+const PAPERS = [
+ ['📍',{es:'Empadronamiento (padrón)',en:'Padrón registration'},{es:'Lo primero. Te inscribes como vecino en el Ayuntamiento con pasaporte y contrato de alquiler (o autorización de quien tiene el piso). Te dan el "volante". Es la puerta para la tarjeta sanitaria, el colegio de los niños y la prueba de tiempo para el arraigo. Cita gratis: 010 o madrid.es.',en:'First step. Register at the city council with your passport and rental contract (or the tenant\'s authorisation). Unlocks health card, schools and proof of residence time. Free appointment: 010 or madrid.es.'},'#EB0A1E'],
+ ['💳',{es:'Tarjeta sanitaria',en:'Health card'},{es:'Con el padrón y tu documento la pides en el centro de salud que te toca. Ver el módulo Salud.',en:'Request it at your local health centre with padrón and ID. See Health.'},'#0A8A3A'],
+ ['🔢',{es:'NIE',en:'NIE number'},{es:'Tu número de identidad de extranjero. Llega con tu autorización de residencia, o se puede pedir aparte por motivos económicos o profesionales. Ojo: el NIE NO es un permiso para trabajar.',en:'Your foreigner ID number. Comes with your residence permit or can be requested separately. It is NOT a work permit.'},'#0067B1'],
+ ['🪪',{es:'TIE',en:'TIE residence card'},{es:'La tarjeta física de residente. Cuando te conceden la autorización, pides cita para huellas en la Policía Nacional (en Madrid, por ejemplo, en Aluche), pagas la tasa y la recoges semanas después.',en:'The physical residence card. Once your permit is granted, book fingerprints with the National Police, pay the fee and collect it weeks later.'},'#C77700'],
+ ['🧾',{es:'Seguridad Social',en:'Social Security'},{es:'Con permiso de trabajo, tu empresa te da de alta y recibes tu número de afiliación. Con él cotizas para salud, paro y pensión.',en:'With a work permit, your employer registers you and you get a Social Security number.'},'#6E6E76']
+];
+const PAPERSACC = [
+ {t:{es:'🗓️ Regularización extraordinaria 2026',en:'🗓️ 2026 extraordinary regularisation'},b:{es:'<p>El plazo para solicitarla fue del 16 de abril al <b>30 de junio de 2026 y ya cerró</b>. Según el Ministerio de Inclusión, se recibieron <b>1.174.978 solicitudes</b>. Si la presentaste, consulta el estado con tu número de expediente en la sede electrónica oficial y no pagues a nadie por "mover" tu caso.</p><p class="mt">Si llegaste después o no la presentaste, la vía habitual es el arraigo (abajo).</p>',en:'<p>Applications ran from 16 April to <b>30 June 2026 and are now closed</b> — 1,174,978 were received, per the Ministry of Inclusion. If you applied, track it with your file number on the official e-office.</p>'}},
+ {t:{es:'🌱 Arraigo: la vía ordinaria',en:'🌱 Arraigo: the regular route'},b:{es:'<p>Con el Reglamento de Extranjería vigente desde el 20 de mayo de 2025, el arraigo se puede pedir tras <b>2 años de permanencia</b> en España. Hay varias modalidades: social, sociolaboral, socioformativo (estudiando una formación), familiar y de segunda oportunidad.</p><ul class="dots mt"><li>El <b>padrón</b> es la prueba clave del tiempo: empadrónate desde el primer mes.</li><li>Guarda pruebas de que vives aquí: citas médicas, cursos, recibos, envíos de dinero.</li><li>No tener antecedentes penales es requisito.</li></ul>',en:'<p>Under the immigration regulation in force since 20 May 2025, arraigo can be requested after <b>2 years</b> in Spain (social, work, training, family and "second chance" routes). The padrón is the key proof of time.</p>'}},
+ {t:{es:'🛡️ Protección internacional (asilo)',en:'🛡️ International protection (asylum)'},b:{es:'<p>Si en tu país corres peligro por persecución, puedes pedir protección internacional en la frontera o ya en España (lo antes posible). CEAR, Accem y Cruz Roja te acompañan gratis en el proceso.</p>',en:'<p>If you face persecution at home, you can apply at the border or in Spain as soon as possible. CEAR, Accem and Red Cross help for free.</p>'}},
+ {t:{es:'🎓 Venir a estudiar',en:'🎓 Coming to study'},b:{es:'<p>Con la estancia por estudios puedes trabajar hasta <b>30 horas a la semana</b> si el trabajo es compatible con los estudios. Se pide el visado en el consulado de España en tu país antes de viajar.</p>',en:'<p>Student status allows work up to <b>30 hours a week</b>. Apply for the visa at the Spanish consulate before travelling.</p>'}},
+ {t:{es:'👪 Si tienes familia española o europea',en:'👪 Spanish or EU family'},b:{es:'<p>El cónyuge, pareja registrada, hijos y otros familiares de ciudadanos españoles o de la UE tienen vías propias de residencia. Asesórate antes de presentar nada.</p>',en:'<p>Spouses, registered partners and children of Spanish/EU citizens have their own residence routes.</p>'}},
+ {t:{es:'🔗 Webs oficiales',en:'🔗 Official sites'},b:{es:'<ul class="dots"><li><a href="https://sede.administracionespublicas.gob.es" target="_blank" rel="noopener">sede.administracionespublicas.gob.es</a> — cita previa de extranjería (gratis)</li><li><a href="https://extranjeros.inclusion.gob.es" target="_blank" rel="noopener">extranjeros.inclusion.gob.es</a> — información y hojas de requisitos</li><li><a href="https://www.madrid.es" target="_blank" rel="noopener">madrid.es</a> — padrón y servicios del Ayuntamiento</li><li><a href="https://www.comunidad.madrid" target="_blank" rel="noopener">comunidad.madrid</a> — sanidad, educación y empleo</li></ul>',en:'<ul class="dots"><li>sede.administracionespublicas.gob.es — free appointments</li><li>extranjeros.inclusion.gob.es — information</li><li>madrid.es — padrón</li><li>comunidad.madrid — health, education, jobs</li></ul>'}}
+];
+
+/* ---------- Checklist ---------- */
+const CHECK = [
+ {es:'Revisar si necesito visado: los colombianos entran sin visado como turistas (hasta 90 días en 180). ETIAS empezará en el último trimestre de 2026.',en:'Check visa rules: Colombians enter visa-free as tourists (90 days in 180). ETIAS starts in the last quarter of 2026.'},
+ {es:'Seguro médico de viaje contratado',en:'Travel health insurance'},
+ {es:'Billete de vuelta, carta de invitación o reserva de alojamiento y prueba de dinero',en:'Return ticket, invitation letter or booking, proof of funds'},
+ {es:'Foto del pasaporte, billetes y seguro guardada en el correo',en:'Copies of passport, tickets and insurance in my email'},
+ {es:'Adaptador de enchufe tipo C/F (dos patas redondas). Voltaje 230 V',en:'Type C/F plug adapter. 230 V'},
+ {es:'SIM o eSIM española (Digi, Lebara, Lycamobile, Simyo…) — piden pasaporte',en:'Spanish SIM or eSIM — passport required'},
+ {es:'Tarjeta contactless o celular con Apple/Google Pay para el metro',en:'Contactless card or phone wallet for the metro'},
+ {es:'Guardar mi dirección en esta app',en:'Save my address in this app'},
+ {es:'Descargar las apps Metro de Madrid, EMT Madrid y el mapa sin conexión en Google Maps',en:'Install Metro de Madrid, EMT Madrid and an offline Google Map'},
+ {es:'Guardar los números: 112, 091, 092 y el consulado',en:'Save 112, 091, 092 and consulate numbers'},
+ {es:'Empadronarme en el Ayuntamiento',en:'Register on the padrón'},
+ {es:'Sacar la tarjeta sanitaria en mi centro de salud',en:'Get my health card at the health centre'},
+ {es:'Abrir cuenta bancaria y activar Bizum',en:'Open a bank account and activate Bizum'},
+ {es:'Inscribirme en el Registro Consular del consulado',en:'Register with my consulate'},
+ {es:'Aprender el camino de casa a la boca de metro más cercana',en:'Learn the way home from the nearest metro'}
+];
+function renderCheck(){
+  const done = store.get('chk',[]);
+  $('#checklist').innerHTML = CHECK.map((c,i)=>`<label class="chk ${done.includes(i)?'done':''}"><input type="checkbox" ${done.includes(i)?'checked':''} onchange="toggleChk(${i})"><span class="t">${esc(L(c))}</span></label>`).join('');
+  const pct = Math.round(done.length/CHECK.length*100);
+  $('#prog').style.width=pct+'%';
+  $('#prog-t').textContent = `${done.length}/${CHECK.length} — ${pct}%`;
+}
+function toggleChk(i){ let d=store.get('chk',[]); d = d.includes(i)? d.filter(x=>x!==i) : [...d,i]; store.set('chk',d); renderCheck(); }
+const VISA = [
+ {t:{es:'🇨🇴 Colombianos: sin visado para turismo',en:'🇨🇴 Colombians: visa-free for tourism'},b:{es:'<p>Desde 2015 los colombianos entran al espacio Schengen sin visado para estancias cortas: <b>hasta 90 días en cualquier periodo de 180</b>. No permite trabajar.</p><ul class="dots mt"><li><b>EES:</b> en la frontera ya no se sella el pasaporte; te toman huellas y foto (sistema que la UE está implantando por fases).</li><li><b>ETIAS:</b> autorización previa por internet, <b>20 €</b>, válida hasta 3 años. La UE dice que empezará en el <b>último trimestre de 2026</b>, anunciará la fecha exacta con meses de antelación y habrá un periodo de transición. Hoy todavía no se pide.</li></ul>',en:'<p>Colombians can stay up to <b>90 days in any 180</b> visa-free; no work allowed.</p><ul class="dots mt"><li><b>EES:</b> fingerprints and photo instead of stamps (phased roll-out).</li><li><b>ETIAS:</b> online authorisation, <b>€20</b>, valid up to 3 years, due in the <b>last quarter of 2026</b> with a transition period. Not required yet.</li></ul>'}},
+ {t:{es:'🌎 Otros latinoamericanos',en:'🌎 Other Latin Americans'},b:{es:'<p>La mayoría (México, Argentina, Chile, Perú, Venezuela, Brasil, Uruguay, Paraguay y Centroamérica) entra sin visado para turismo. Ecuador, Bolivia, Cuba, República Dominicana y Haití sí necesitan visado. Comprueba tu caso en <a href="https://www.exteriores.gob.es" target="_blank" rel="noopener">exteriores.gob.es</a>.</p>',en:'<p>Most Latin Americans are visa-free; Ecuador, Bolivia, Cuba, Dominican Republic and Haiti need a visa. Check exteriores.gob.es.</p>'}},
+ {t:{es:'🧳 Qué llevar a la frontera',en:'🧳 What to carry at the border'},b:{es:'<ul class="dots"><li>Pasaporte vigente (con validez de al menos 3 meses después de tu salida prevista)</li><li>Billete de vuelta</li><li>Alojamiento: reserva de hotel o carta de invitación tramitada por quien te recibe en la Policía Nacional</li><li>Prueba de medios económicos (extractos o tarjetas)</li><li>Seguro médico de viaje</li></ul>',en:'<ul class="dots"><li>Passport valid 3+ months after departure</li><li>Return ticket</li><li>Booking or invitation letter</li><li>Proof of funds</li><li>Travel insurance</li></ul>'}},
+ {t:{es:'⚠️ Cuidado con webs falsas',en:'⚠️ Beware of fake websites'},b:{es:'<p>Cuando arranque ETIAS, pídelo solo en la web oficial de la Unión Europea (travel-europe.europa.eu). Hay páginas que imitan al gobierno y cobran mucho más.</p>',en:'<p>Apply for ETIAS only on the official EU site (travel-europe.europa.eu).</p>'}}
+];
+
+/* ---------- Money ---------- */
+let RATES=null;
+const CUR = ['EUR','COP','USD','MXN','PEN','VES','ARS','CLP','BOB','DOP','GBP'];
+async function loadRates(){
+  try{
+    const {data}=await getJSON('https://open.er-api.com/v6/latest/EUR');
+    if(data?.result!=='success') throw 0;
+    RATES=data.rates; store.set('rates',{r:RATES,t:data.time_last_update_unix});
+  }catch(e){ const c=store.get('rates',null); if(c) RATES=c.r; }
+  renderFX();
+}
+const fmt=(n,c)=>new Intl.NumberFormat(LANG==='es'?'es-CO':'en-GB',{style:'currency',currency:c,maximumFractionDigits:['COP','CLP'].includes(c)?0:2}).format(n);
+function renderFX(){
+  if(document.getElementById('pay-out')) try{renderPay();}catch(e){}
+  const c=store.get('rates',null);
+  if(!RATES){ $('#fx-main').innerHTML=`<span class="small muted">${L({es:'Sin conexión para tasas.',en:'No connection for rates.'})}</span>`; return; }
+  $('#fx-main').innerHTML = `<div style="font-family:'Barlow Condensed';font-size:2rem;font-weight:800">1 € = ${fmt(RATES.COP,'COP')}</div><div class="small">1 € = ${fmt(RATES.USD,'USD')} · ${fmt(RATES.GBP,'GBP')}</div>`;
+  if(c?.t) $('#fx-upd').textContent = L({es:'Actualizado',en:'Updated'})+': '+tz(new Date(c.t*1000),'America/Bogota',{dateStyle:'medium',timeStyle:'short'})+' (COL) · ExchangeRate-API';
+  const sel=$('#fx-from'); if(!sel.options.length) sel.innerHTML=CUR.map(x=>`<option>${x}</option>`).join('');
+  const amt=+$('#fx-amt').value||0, from=sel.value||'EUR', inEUR = amt / (from==='EUR'?1:RATES[from]);
+  $('#fx-results').innerHTML = CUR.filter(x=>x!==from).map(x=>`<div class="arr"><span>${x}</span><b>${fmt(inEUR*(x==='EUR'?1:RATES[x]),x)}</b></div>`).join('');
+  $('#wage-cop').textContent = '≈ '+fmt(1221*RATES.COP,'COP')+' '+L({es:'por mes',en:'per month'});
+}
+const MONEY_TIPS = [
+ {es:'Si vas a quedarte, el abono de transporte (32,70 €/mes en zona A durante 2026) sale mucho más barato que pagar viajes sueltos.',en:'Staying? The monthly pass (€32.70 zone A in 2026) beats single tickets.'},
+ {es:'Museos gratis a ciertas horas: el Prado de lunes a sábado de 18 a 20 h y domingos y festivos de 17 a 19 h.',en:'Free museum hours: the Prado Mon–Sat 18:00–20:00, Sundays & holidays 17:00–19:00.'},
+ {es:'Supermercados baratos: Mercadona, Lidl, Aldi y Dia. Los mercados de barrio tienen buena fruta.',en:'Cheap supermarkets: Mercadona, Lidl, Aldi, Dia.'},
+ {es:'El "menú del día" (primer plato, segundo, postre y bebida) al mediodía es la forma más barata de comer fuera.',en:'The lunchtime "menú del día" is the cheapest way to eat out.'},
+ {es:'Paga en euros cuando el datáfono te pregunte; pagar en pesos sale más caro.',en:'Always pay in euros when the card machine asks.'},
+ {es:'Para mandar plata a Colombia compara el cambio y la comisión entre apps (Wise, Remitly, etc.) y locutorios antes de enviar.',en:'Compare rates and fees between remittance apps and shops before sending money home.'},
+ {es:'Apps como Too Good To Go venden comida del día con gran descuento.',en:'Too Good To Go sells surplus food cheaply.'}
+];
+
+/* ---------- Culture ---------- */
+const CULTURE = [
+ ['😘',{es:'Dos besos',en:'Two kisses'},{es:'Al saludar (sobre todo a mujeres) se dan dos besos, primero en la mejilla derecha. Entre hombres, apretón de manos.',en:'Greetings are two kisses, right cheek first; men usually shake hands.'}],
+ ['🕑',{es:'Horarios tardíos',en:'Late hours'},{es:'La "comida" es entre 14:00 y 16:00 y se cena a las 21:00 o más tarde. Muchos comercios pequeños cierran a mediodía.',en:'Lunch is 14:00–16:00, dinner 21:00 or later.'}],
+ ['🗣️',{es:'Todo el mundo se tutea',en:'Everyone uses "tú"'},{es:'Aquí se usa "tú" hasta con desconocidos. No es falta de respeto; el "usted" queda para mayores o momentos formales.',en:'"Tú" is used even with strangers — it\'s not rude.'}],
+ ['😮',{es:'Hablan directo',en:'People are direct'},{es:'Los madrileños hablan alto y van al grano. Un "no" es solo un no; no lo tomes como grosería.',en:'People speak loudly and directly — not rude.'}],
+ ['🍷',{es:'Bares y terrazas',en:'Bars and terraces'},{es:'La vida social pasa en el bar. En algunos sitios te ponen una tapa gratis con la bebida.',en:'Social life happens in bars; some give a free tapa with drinks.'}],
+ ['💶',{es:'Propinas',en:'Tipping'},{es:'No son obligatorias. Se suele redondear o dejar unas monedas si el servicio fue bueno.',en:'Optional; round up if service was good.'}],
+ ['🧍',{es:'Escaleras mecánicas',en:'Escalators'},{es:'Párate a la derecha y deja libre la izquierda para quien camina.',en:'Stand right, walk left.'}],
+ ['🏖️',{es:'Agosto y domingos',en:'August and Sundays'},{es:'En agosto la ciudad se vacía y algunos negocios cierran. En Madrid muchas tiendas grandes abren los domingos, pero el comercio pequeño suele cerrar.',en:'Madrid empties in August. Many big shops open on Sundays; small ones often don\'t.'}],
+ ['🤫',{es:'Descanso de los vecinos',en:'Quiet hours'},{es:'En los edificios se respeta el silencio por la noche. No se fuma dentro de bares ni restaurantes.',en:'Keep quiet at night in buildings. No smoking indoors in bars.'}],
+ ['🥘',{es:'Lo típico',en:'Local food'},{es:'Prueba la tortilla de patatas, el cocido madrileño, el bocadillo de calamares y el chocolate con churros.',en:'Try tortilla, cocido madrileño, calamari sandwich and churros with chocolate.'}]
+];
+
+/* ---------- Safety ---------- */
+const SAFETY = [
+ {t:{es:'👜 Carteristas',en:'👜 Pickpockets'},b:{es:'<p>Es el delito más común. Zonas con más riesgo: el metro en hora pico (sobre todo en las puertas del vagón), Sol, Gran Vía, Plaza Mayor y el Rastro. Mochila adelante, nada en los bolsillos de atrás.</p>',en:'<p>The most common crime: crowded metro doors, Sol, Gran Vía, Plaza Mayor, the Rastro. Bag in front.</p>'}},
+ {t:{es:'📱 El celular en la terraza',en:'📱 Phone on the table'},b:{es:'<p>No dejes el celular sobre la mesa del bar: se lo llevan con una distracción (alguien te pone un papel o un mapa encima).</p>',en:'<p>Don\'t leave your phone on café tables — thieves use distraction tricks.</p>'}},
+ {t:{es:'🚕 Taxis',en:'🚕 Taxis'},b:{es:'<p>Los taxis oficiales son blancos con una franja roja en la puerta. Del aeropuerto al centro (dentro de la M-30) hay tarifa fija, indicada en el taxi. Uber y Cabify solo por app; nunca te subas a un carro que te ofrecen en la salida.</p>',en:'<p>Official taxis are white with a red stripe; fixed fare airport–centre. Ride-hailing only via app.</p>'}},
+ {t:{es:'🎭 Estafas comunes',en:'🎭 Common scams'},b:{es:'<ul class="dots"><li>Trileros (el juego de la bolita) en Sol y Gran Vía: es un montaje.</li><li>Pisos baratísimos en internet que piden señal sin enseñarlos.</li><li>"Gestores" que venden citas de extranjería o prometen papeles rápidos.</li><li>Ofertas de trabajo que piden pagar para empezar.</li><li>SMS falsos de "paquete pendiente", del banco o de multas pidiendo datos.</li></ul>',en:'<ul class="dots"><li>Street shell games, fake rentals, fake immigration "fixers", jobs that ask for payment, phishing texts.</li></ul>'}},
+ {t:{es:'🌙 De noche',en:'🌙 At night'},b:{es:'<p>Comparte tu ubicación con alguien, usa calles con movimiento y transporte oficial. El metro cierra hacia la 1:30; después están los búhos desde Cibeles.</p>',en:'<p>Share your location, use busy streets and official transport. Metro closes ~01:30; then night buses from Cibeles.</p>'}}
+];
+
+/* ---------- Media ---------- */
+const GALLERY = [
+ ['Puerta_del_Sol','Puerta del Sol',40.4169,-3.7035],['Plaza_Mayor,_Madrid','Plaza Mayor',40.4155,-3.7074],['Royal_Palace_of_Madrid','Palacio Real',40.4180,-3.7143],
+ ['Gran_Vía_(Madrid)','Gran Vía',40.4200,-3.7058],['Buen_Retiro_Park','Parque del Retiro',40.4153,-3.6845],['Museo_del_Prado','Museo del Prado',40.4138,-3.6921],
+ ['Temple_of_Debod','Templo de Debod',40.4240,-3.7177],['Plaza_de_Cibeles','Cibeles',40.4193,-3.6931],['Puerta_de_Alcalá','Puerta de Alcalá',40.4200,-3.6887],
+ ['Madrid_Metro','Metro de Madrid',40.4169,-3.7035],['Adolfo_Suárez_Madrid–Barajas_Airport','Aeropuerto de Barajas',40.4919,-3.5935],['El_Rastro','El Rastro',40.4087,-3.7075],
+ ['Mercado_de_San_Miguel','Mercado de San Miguel',40.4154,-3.7090],['Madrid_Río','Madrid Río',40.4040,-3.7195],['Almudena_Cathedral','Catedral de la Almudena',40.4157,-3.7146]
+];
+const VIDEOS = [
+ [{es:'Cómo usar el metro de Madrid',en:'How to use the Madrid metro'},'como usar el metro de madrid'],
+ [{es:'Del aeropuerto de Barajas al centro',en:'Barajas airport to the city centre'},'aeropuerto barajas al centro de madrid metro'],
+ [{es:'Cómo empadronarse en Madrid',en:'How to register on the padrón in Madrid'},'como empadronarse en madrid'],
+ [{es:'Colombianos viviendo en Madrid',en:'Colombians living in Madrid'},'colombianos viviendo en madrid'],
+ [{es:'Caminata por Madrid 4K',en:'Madrid walking tour 4K'},'madrid walking tour 4k 2026'],
+ [{es:'Palabras de España que confunden a los latinos',en:'Spanish words that confuse Latin Americans'},'palabras de españa que confunden a latinos']
+];
+/* Fotos reales de Wikipedia / Wikimedia Commons.
+   Wikimedia solo sirve miniaturas en tamaños estándar (250, 330, 500, 960, 1280…),
+   así que pedimos URLs a la API oficial y probamos cada foto antes de mostrarla. */
+const IMGC = store.get('img3',{});
+const IMG_PENDING = {};
+const sized = (u,w)=> /\/thumb\//.test(u) ? u.replace(/\/\d+px-([^/]+)$/, `/${w}px-$1`) : u;
+function probe(u){ return new Promise(res=>{ if(!u) return res(false); const i=new Image(); const t=setTimeout(()=>res(false),12000); i.onload=()=>{clearTimeout(t);res(i.naturalWidth>1);}; i.onerror=()=>{clearTimeout(t);res(false);}; i.referrerPolicy='no-referrer'; i.src=u; }); }
+async function wikiBatch(titles){
+  const need=[...new Set(titles)].filter(t=>t && !IMGC[t] && !IMG_PENDING[t]);
+  for(let i=0;i<need.length;i+=40){
+    const chunk=need.slice(i,i+40);
+    const job=(async()=>{
+      try{
+        const url='https://en.wikipedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&redirects=1&prop=pageimages&piprop=thumbnail|original&pithumbsize=500&titles='+encodeURIComponent(chunk.map(t=>t.replace(/_/g,' ')).join('|'));
+        const {data}=await getJSON(url);
+        const q=data?.query||{}; const map={};
+        (q.normalized||[]).forEach(n=>map[n.from]=n.to);
+        (q.redirects||[]).forEach(r=>map[r.from]=r.to);
+        const pages={}; (q.pages||[]).forEach(pg=>pages[pg.title]=pg);
+        chunk.forEach(t=>{ let k=t.replace(/_/g,' '); for(let n=0;n<3&&map[k];n++) k=map[k]; const pg=pages[k];
+          if(pg&&(pg.thumbnail||pg.original)) IMGC[t]={t:pg.thumbnail?.source||'',o:pg.original?.source||''}; });
+        store.set('img3',IMGC);
+      }catch(e){}
+    })();
+    chunk.forEach(t=>IMG_PENDING[t]=job);
+    await job; chunk.forEach(t=>delete IMG_PENDING[t]);
+  }
+  await Promise.all(titles.map(t=>IMG_PENDING[t]).filter(Boolean));
+}
+async function commonsSearch(q){
+  try{
+    const url='https://commons.wikimedia.org/w/api.php?action=query&format=json&formatversion=2&origin=*&generator=search&gsrnamespace=6&gsrlimit=3&gsrsearch='+encodeURIComponent(q+' filetype:bitmap')+'&prop=imageinfo&iiprop=url&iiurlwidth=500';
+    const {data}=await getJSON(url);
+    const pg=(data?.query?.pages||[]).sort((a,b)=>a.index-b.index).find(x=>x.imageinfo?.[0]?.thumburl);
+    return pg?{t:pg.imageinfo[0].thumburl,o:pg.imageinfo[0].url}:null;
+  }catch(e){ return null; }
+}
+/* Devuelve una URL que SÍ carga (o null). big=true para la foto grande. */
+async function wikiImg(title,w=500,fallbackQuery){
+  await wikiBatch([title]);
+  let r=IMGC[title];
+  const cands = r ? (w>500 ? [sized(r.t,960), r.t, r.o] : [r.t, sized(r.t,330), r.o]) : [];
+  for(const c of [...new Set(cands)]) if(await probe(c)) return c;
+  const cs = await commonsSearch(fallbackQuery || title.replace(/_/g,' ').replace(/,.*$/,'')+' Madrid');
+  if(cs){ for(const c of (w>500?[sized(cs.t,960),cs.t,cs.o]:[cs.t,cs.o])) if(await probe(c)){ IMGC[title]=cs; store.set('img3',IMGC); return c; } }
+  return null;
+}
+
+let galDone=false;
+function loadGallery(){
+  if(galDone) return; galDone=true;
+  $('#gallery').innerHTML = GALLERY.map((g,i)=>`<div class="ph" id="ph${i}" onclick="flyTo(${g[2]},${g[3]})"><div class="ph-fb"><span class="spin" style="position:static;background:none;padding:0"></span></div><span>${esc(g[1])}</span></div>`).join('');
+  GALLERY.forEach(async (g,i)=>{
+    const el=$('#ph'+i);
+    try{ const src=await wikiImg(g[0],500,g[1]+' Madrid'); if(!src) throw 0;
+      el.querySelector('.ph-fb').outerHTML = `<img alt="${esc(g[1])}" src="${src}" referrerpolicy="no-referrer">`;
+    }catch(e){ el.querySelector('.ph-fb').innerHTML='📷'; }
+  });
+  renderVideos();
+}
+function renderVideos(){
+  $('#vlinks').innerHTML = VIDEOS.map(v=>`<a class="vlink" href="https://www.youtube.com/results?search_query=${encodeURIComponent(v[1])}" target="_blank" rel="noopener"><span class="play">▶</span><span><b>${esc(L(v[0]))}</b><br><small class="muted">YouTube</small></span></a>`).join('');
+}
+function flyTo(lat,lng){ go('map'); setTimeout(()=>{ map.setView([lat,lng],16); },250); }
+async function loadHero(){
+  try{ const src=await wikiImg('Gran_Vía_(Madrid)',960,'Gran Via Madrid Metropolis'); if(src){ $('#hero').style.backgroundImage=`url("${src}")`; $('#hero-credit').textContent='Foto: Wikimedia Commons'; } }catch(e){}
+}
+
+/* ---------- Weather (Open-Meteo) ---------- */
+const WMO = c=> c===0?['☀️',{es:'Despejado',en:'Clear'}]: c<=3?['⛅',{es:'Parcialmente nublado',en:'Partly cloudy'}]: c<=48?['🌫️',{es:'Niebla',en:'Fog'}]: c<=57?['🌦️',{es:'Llovizna',en:'Drizzle'}]: c<=67?['🌧️',{es:'Lluvia',en:'Rain'}]: c<=77?['🌨️',{es:'Nieve',en:'Snow'}]: c<=82?['🌧️',{es:'Aguaceros',en:'Showers'}]:['⛈️',{es:'Tormenta',en:'Storm'}];
+let WX=null;
+async function loadWeather(){
+  try{ const {data}=await getJSON('https://api.open-meteo.com/v1/forecast?latitude=40.4168&longitude=-3.7038&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max&timezone=Europe%2FMadrid&forecast_days=4');
+    if(!data?.current) throw 0; WX=data; store.set('wx',data);
+  }catch(e){ WX=store.get('wx',null); }
+  renderWeather();
+}
+function renderWeather(){
+  if(!WX){ $('#wx').innerHTML=`<span class="small">${L({es:'Sin datos del clima.',en:'No weather data.'})}</span>`; return; }
+  const c=WX.current, w=WMO(c.weather_code);
+  $('#wx').innerHTML = `<span style="font-size:2.6rem">${w[0]}</span><div><div class="t">${Math.round(c.temperature_2m)}°C</div><div class="small" style="opacity:.8">${L(w[1])} · ${L({es:'sensación',en:'feels'})} ${Math.round(c.apparent_temperature)}°</div></div>`;
+  const d=WX.daily;
+  $('#wx-days').innerHTML = d.time.slice(1,4).map((t,i)=>{ const k=i+1; return `<div>${tz(new Date(t+'T12:00:00Z'),'Europe/Madrid',{weekday:'short'})}<br>${WMO(d.weather_code[k])[0]}<br><b>${Math.round(d.temperature_2m_max[k])}°</b>/${Math.round(d.temperature_2m_min[k])}°<br>💧${d.precipitation_probability_max[k]??0}%</div>`; }).join('');
+  const rain = d.precipitation_probability_max[0]>=40, cold = c.temperature_2m<10, hot = d.temperature_2m_max[0]>=32, uv=(d.uv_index_max?.[0]??0)>=7;
+  $('#wx-tip').textContent = (rain? L({es:'☔ Lleva sombrilla hoy. ',en:'☔ Take an umbrella today. '}):'') + (cold? L({es:'🧥 Hace frío: abrígate por capas. ',en:'🧥 It\'s cold: wear layers. '}):'') + (hot? L({es:'🥵 Mucho calor: agua, sombra y evita el sol del mediodía. ',en:'🥵 Very hot: water, shade, avoid midday sun. '}):'') + (uv&&!hot? L({es:'🧴 Sol fuerte: usa protector.',en:'🧴 Strong sun: wear sunscreen.'}):'');
+}
+
+/* ---------- My address ---------- */
+function saveAddr(){ const v=$('#my-addr').value.trim(); store.set('addr',v); toast(v?L({es:'Dirección guardada ✓',en:'Address saved ✓'}):L({es:'Dirección borrada',en:'Address cleared'})); }
+function routeHome(){
+  const a=store.get('addr',''); if(!a){ toast(L({es:'Primero guarda tu dirección',en:'Save your address first'})); return; }
+  go('transit'); $('#j-from').value=''; $('#j-to').value=a; destLabel=L({es:'🏠 Casa',en:'🏠 Home'}); planJourney();
+}
+function openShow(){ const a=store.get('addr',''); $('#show-addr').textContent = a || L({es:'(Guarda tu dirección en Inicio)',en:'(Save your address on Home)'}); $('#showcard').classList.add('on'); }
+
+
+/* =========================================================
+   LUGARES DE INTERÉS
+   free: 1 = gratis · 2 = gratis a ciertas horas / parte gratis · 0 = de pago
+   ========================================================= */
+const PCATS = {
+  all:{ic:'⭐',n:{es:'Todos',en:'All'}}, free:{ic:'🆓',n:{es:'Gratis',en:'Free'}},
+  museo:{ic:'🖼️',n:{es:'Museos',en:'Museums'}}, monu:{ic:'👑',n:{es:'Monumentos',en:'Landmarks'}},
+  parque:{ic:'🌳',n:{es:'Parques',en:'Parks'}}, mercado:{ic:'🛍️',n:{es:'Mercados',en:'Markets'}},
+  barrio:{ic:'🏘️',n:{es:'Barrios',en:'Neighbourhoods'}}, vista:{ic:'🌆',n:{es:'Miradores',en:'Viewpoints'}},
+  ninos:{ic:'🧒',n:{es:'Con niños',en:'With kids'}}, excursion:{ic:'🚆',n:{es:'Excursiones',en:'Day trips'}},
+  latino:{ic:'🫓',n:{es:'Latino',en:'Latin'}}, fav:{ic:'❤️',n:{es:'Mis lugares',en:'My places'}}
+};
+const LUGARES = [
+ {id:'prado',n:'Museo del Prado',w:'Museo_del_Prado',es:'Museo_del_Prado',lat:40.4138,lng:-3.6921,c:['museo'],free:2,st:'Banco de España / Atocha',web:'https://www.museodelprado.es',
+  d:{es:'Uno de los mejores museos de pintura del mundo: Velázquez (Las Meninas), Goya, El Greco, Rubens y El Bosco.',en:'One of the world\'s great art museums: Velázquez\'s Las Meninas, Goya, El Greco, Bosch.'},
+  tip:{es:'Gratis de lunes a sábado de 18:00 a 20:00 y domingos y festivos de 17:00 a 19:00. Llega 30 minutos antes: se forma fila.',en:'Free Mon–Sat 18:00–20:00, Sundays & holidays 17:00–19:00. Arrive 30 min early.'}},
+ {id:'reina',n:'Museo Reina Sofía',w:'Museo_Reina_Sofía',es:'Museo_Nacional_Centro_de_Arte_Reina_Sofía',lat:40.4080,lng:-3.6946,c:['museo'],free:2,st:'Estación del Arte / Atocha',web:'https://www.museoreinasofia.es',
+  d:{es:'Arte moderno español. Aquí está el Guernica de Picasso, además de Dalí y Miró.',en:'Modern Spanish art, home of Picasso\'s Guernica, plus Dalí and Miró.'},
+  tip:{es:'Tiene horas de entrada gratuita algunas tardes y el domingo: consulta el horario en la web antes de ir.',en:'Free entry some evenings and on Sundays — check times online.'}},
+ {id:'thyssen',n:'Museo Thyssen-Bornemisza',w:'Thyssen-Bornemisza_Museum',es:'Museo_Thyssen-Bornemisza',lat:40.4161,lng:-3.6949,c:['museo'],free:2,st:'Banco de España',web:'https://www.museothyssen.org',
+  d:{es:'Ocho siglos de pintura europea en un palacio: de los primitivos italianos a Van Gogh y el pop art.',en:'Eight centuries of European painting, from Italian primitives to Van Gogh and pop art.'},
+  tip:{es:'La colección permanente es gratis los lunes a mediodía. Junto con el Prado y el Reina forma el "Paseo del Arte".',en:'Permanent collection free on Monday middays. Part of the "Art Walk" with the Prado and Reina.'}},
+ {id:'palacio',n:'Palacio Real',w:'Royal_Palace_of_Madrid',es:'Palacio_Real_de_Madrid',lat:40.4180,lng:-3.7143,c:['monu'],free:2,st:'Ópera',web:'https://www.patrimonionacional.es',
+  d:{es:'El palacio real más grande de Europa occidental, con más de 3.000 salones. Desde fuera, la plaza de la Armería tiene gran vista.',en:'Western Europe\'s largest royal palace. Great views from the Armería square.'},
+  tip:{es:'Patrimonio Nacional da entrada gratis a ciudadanos iberoamericanos y residentes en la UE algunas tardes de lunes a jueves: lleva pasaporte y consulta el horario.',en:'Free for Ibero-American citizens and EU residents some weekday afternoons — bring your passport.'}},
+ {id:'almudena',n:'Catedral de la Almudena',w:'Almudena_Cathedral',es:'Catedral_de_Santa_María_la_Real_de_la_Almudena',lat:40.4157,lng:-3.7146,c:['monu'],free:1,st:'Ópera',web:'https://catedraldelaalmudena.es',
+  d:{es:'La catedral de Madrid, frente al Palacio Real. Por dentro mezcla lo neogótico con colores modernos.',en:'Madrid\'s cathedral, facing the Royal Palace.'},
+  tip:{es:'Entrada a la catedral libre (se agradece un donativo). El museo y la cúpula son de pago.',en:'Free entry (donation welcome); museum and dome are paid.'}},
+ {id:'mayor',n:'Plaza Mayor',w:'Plaza_Mayor,_Madrid',es:'Plaza_Mayor_de_Madrid',lat:40.4155,lng:-3.7074,c:['monu'],free:1,st:'Sol / Ópera',web:'',
+  d:{es:'La gran plaza porticada del siglo XVII, corazón del Madrid de los Austrias. En diciembre tiene mercado de Navidad.',en:'The grand 17th-century arcaded square; Christmas market in December.'},
+  tip:{es:'Pide el famoso bocadillo de calamares en las calles de alrededor: más barato que en la plaza.',en:'Try the calamari sandwich in the side streets — cheaper than on the square.'}},
+ {id:'sol',n:'Puerta del Sol',w:'Puerta_del_Sol',es:'Puerta_del_Sol',lat:40.4169,lng:-3.7035,c:['monu'],free:1,st:'Sol',web:'',
+  d:{es:'El kilómetro cero de España, el Oso y el Madroño y el reloj de las campanadas de Año Nuevo.',en:'Spain\'s Kilometre Zero, the Bear and Strawberry Tree statue and the New Year clock.'},
+  tip:{es:'Punto de encuentro clásico. Mucha gente = carteristas: cuida el celular.',en:'Classic meeting point. Crowds mean pickpockets.'}},
+ {id:'granvia',n:'Gran Vía',w:'Gran_Vía_(Madrid)',es:'Gran_Vía_(Madrid)',lat:40.4200,lng:-3.7058,c:['monu'],free:1,st:'Gran Vía / Callao',web:'',
+  d:{es:'La avenida más famosa de Madrid: edificios de principios del siglo XX, tiendas, cines y teatros musicales.',en:'Madrid\'s famous avenue: early-20th-century buildings, shops and musicals.'},
+  tip:{es:'Camina desde el edificio Metrópolis (Alcalá) hasta Plaza de España. Muy bonita de noche.',en:'Walk from the Metrópolis building to Plaza de España. Lovely at night.'}},
+ {id:'retiro',n:'Parque del Retiro',w:'Buen_Retiro_Park',es:'Parque_del_Buen_Retiro',lat:40.4153,lng:-3.6845,c:['parque','ninos'],free:1,st:'Retiro / Ibiza',web:'',
+  d:{es:'El gran parque de Madrid, Patrimonio de la Humanidad: estanque con barcas, Palacio de Cristal y rosaleda.',en:'Madrid\'s great park (UNESCO): rowing lake, Crystal Palace, rose garden.'},
+  tip:{es:'Entrada gratis. Las barcas del estanque son de pago. Domingo por la mañana hay ambiente, músicos y familias.',en:'Free. Rowing boats are paid. Sunday mornings are lively.'}},
+ {id:'debod',n:'Templo de Debod',w:'Temple_of_Debod',es:'Templo_de_Debod',lat:40.4240,lng:-3.7177,c:['monu','vista'],free:1,st:'Plaza de España / Ventura Rodríguez',web:'',
+  d:{es:'Un templo egipcio de verdad, de más de 2.000 años, regalado por Egipto. Es el mejor atardecer de Madrid.',en:'A real 2,000-year-old Egyptian temple, gifted by Egypt. Best sunset in town.'},
+  tip:{es:'Gratis. Llega media hora antes de la puesta de sol para coger buen sitio.',en:'Free. Arrive 30 min before sunset.'}},
+ {id:'pespana',n:'Plaza de España',w:'Plaza_de_España,_Madrid',es:'Plaza_de_España_(Madrid)',lat:40.4233,lng:-3.7123,c:['monu','parque'],free:1,st:'Plaza de España',web:'',
+  d:{es:'Plaza renovada con el monumento a Cervantes, Don Quijote y Sancho Panza, y conexión peatonal con Madrid Río.',en:'Renovated square with the Cervantes monument, linked on foot to Madrid Río.'},
+  tip:{es:'Combínala con el Templo de Debod, que está al lado.',en:'Combine with the Temple of Debod next door.'}},
+ {id:'sanmiguel',n:'Mercado de San Miguel',w:'Mercado_de_San_Miguel',es:'Mercado_de_San_Miguel',lat:40.4154,lng:-3.7090,c:['mercado'],free:1,st:'Sol',web:'https://mercadodesanmiguel.es',
+  d:{es:'Mercado de hierro de 1916 convertido en lugar de tapas gourmet.',en:'A 1916 iron market turned gourmet tapas hall.'},
+  tip:{es:'Entrar es gratis, pero los precios son de zona turística. Para comer barato, mejor La Latina.',en:'Free to enter, touristy prices. Eat cheaper in La Latina.'}},
+ {id:'rastro',n:'El Rastro',w:'El_Rastro',es:'El_Rastro',lat:40.4087,lng:-3.7075,c:['mercado','barrio'],free:1,st:'La Latina / Puerta de Toledo',web:'',
+  d:{es:'El mercadillo al aire libre más famoso de España: ropa, antigüedades y de todo. Solo domingos y festivos por la mañana.',en:'Spain\'s most famous flea market, Sunday and holiday mornings.'},
+  tip:{es:'Ve temprano (9–11). Mochila adelante: es zona de carteristas. Termina con cañas en La Latina.',en:'Go early. Watch your bag. Finish with drinks in La Latina.'}},
+ {id:'circulo',n:'Azotea del Círculo de Bellas Artes',w:'Círculo_de_Bellas_Artes',es:'Círculo_de_Bellas_Artes',lat:40.4185,lng:-3.6967,c:['vista'],free:0,st:'Banco de España / Sevilla',web:'https://www.circulobellasartes.com',
+  d:{es:'Una de las vistas más famosas de Madrid, sobre la Gran Vía y el edificio Metrópolis.',en:'One of Madrid\'s best rooftop views over Gran Vía.'},
+  tip:{es:'Se paga entrada a la azotea. Al atardecer se llena.',en:'Paid entry. Busy at sunset.'}},
+ {id:'cibeles',n:'Plaza de Cibeles',w:'Plaza_de_Cibeles',es:'Plaza_de_Cibeles',lat:40.4193,lng:-3.6931,c:['monu','vista'],free:2,st:'Banco de España',web:'https://www.centrocentro.org',
+  d:{es:'La fuente de la diosa Cibeles y el Palacio de Cibeles (Ayuntamiento), con mirador en lo alto.',en:'The Cibeles fountain and City Hall palace, with a rooftop viewpoint.'},
+  tip:{es:'La plaza es gratis; el mirador del Palacio (CentroCentro) se paga y conviene reservar.',en:'Square free; the palace viewpoint is paid.'}},
+ {id:'alcala',n:'Puerta de Alcalá',w:'Puerta_de_Alcalá',es:'Puerta_de_Alcalá',lat:40.4200,lng:-3.6887,c:['monu'],free:1,st:'Retiro',web:'',
+  d:{es:'Puerta monumental de 1778 junto a la entrada principal del Retiro. Símbolo de Madrid.',en:'1778 monumental gate by Retiro\'s main entrance.'},
+  tip:{es:'De noche está iluminada y queda a dos pasos del consulado de Colombia.',en:'Lit up at night; next to the Colombian consulate.'}},
+ {id:'bernabeu',n:'Estadio Santiago Bernabéu',w:'Santiago_Bernabéu_Stadium',es:'Estadio_Santiago_Bernabéu',lat:40.4531,lng:-3.6883,c:['monu','ninos'],free:0,st:'Santiago Bernabéu',web:'https://www.realmadrid.com',
+  d:{es:'El estadio del Real Madrid, renovado con techo retráctil. Tiene recorrido por el museo y el campo.',en:'Real Madrid\'s renovated stadium with a museum and stadium tour.'},
+  tip:{es:'El tour es de pago y se compra en la web oficial. Los días de partido cambia el horario.',en:'Paid tour from the official site; hours change on match days.'}},
+ {id:'madridrio',n:'Madrid Río',w:'Madrid_Río',es:'Madrid_Río',lat:40.4040,lng:-3.7195,c:['parque','ninos'],free:1,st:'Príncipe Pío / Puerta del Ángel',web:'',
+  d:{es:'Parque lineal a lo largo del río Manzanares: puentes, playa urbana en verano, juegos para niños y ciclovía.',en:'Riverside park with bridges, play areas, summer "beach" and bike lanes.'},
+  tip:{es:'Gratis. Ideal para caminar o montar en bici con la familia.',en:'Free. Great for family walks and cycling.'}},
+ {id:'teleferico',n:'Teleférico de Madrid',w:'Teleférico_de_Madrid',es:'Teleférico_de_Madrid',lat:40.4255,lng:-3.7215,c:['vista','ninos'],free:0,st:'Argüelles',web:'https://teleferico.emtmadrid.es',
+  d:{es:'Cabinas que cruzan por el aire del Parque del Oeste a la Casa de Campo, con vista de la ciudad.',en:'Cable car from Parque del Oeste to Casa de Campo with city views.'},
+  tip:{es:'De pago. No funciona todo el año todos los días: revisa la web.',en:'Paid; not open daily all year.'}},
+ {id:'zoo',n:'Zoo Aquarium de Madrid',w:'Zoo_Aquarium_de_Madrid',es:'Zoo_Aquarium_de_Madrid',lat:40.4095,lng:-3.7623,c:['ninos'],free:0,st:'Casa de Campo (+ bus)',web:'https://www.zoomadrid.com',
+  d:{es:'Zoológico y acuario en la Casa de Campo, con osos panda y delfines.',en:'Zoo and aquarium in Casa de Campo, with pandas and dolphins.'},
+  tip:{es:'Entradas más baratas comprando por internet con antelación.',en:'Cheaper online in advance.'}},
+ {id:'atracciones',n:'Parque de Atracciones',w:'Parque_de_Atracciones_de_Madrid',es:'Parque_de_Atracciones_de_Madrid',lat:40.4115,lng:-3.7505,c:['ninos'],free:0,st:'Batán',web:'https://www.parquedeatracciones.es',
+  d:{es:'Montañas rusas y juegos para todas las edades en la Casa de Campo.',en:'Roller coasters and rides in Casa de Campo.'},
+  tip:{es:'Busca ofertas en la web; entre semana hay menos fila.',en:'Look for online deals; weekdays are quieter.'}},
+ {id:'man',n:'Museo Arqueológico Nacional',w:'National_Archaeological_Museum_(Madrid)',es:'Museo_Arqueológico_Nacional_(España)',lat:40.4236,lng:-3.6888,c:['museo','ninos'],free:2,st:'Serrano / Colón',web:'https://www.man.es',
+  d:{es:'De la prehistoria a la Edad Media: la Dama de Elche, réplica de la cueva de Altamira y tesoros visigodos.',en:'From prehistory to the Middle Ages: the Lady of Elche and an Altamira replica.'},
+  tip:{es:'Tiene horas gratis el fin de semana (sábado por la tarde y domingo por la mañana); confirma en la web.',en:'Free some weekend hours; check online.'}},
+ {id:'caixa',n:'CaixaForum Madrid',w:'CaixaForum_Madrid',es:'CaixaForum_Madrid',lat:40.4111,lng:-3.6934,c:['museo'],free:2,st:'Atocha',web:'https://caixaforum.org/es/madrid',
+  d:{es:'Centro cultural con un famoso jardín vertical de 24 metros en la fachada.',en:'Cultural centre with a famous 24-metre vertical garden.'},
+  tip:{es:'El jardín vertical se ve gratis desde fuera; las exposiciones cuestan poco.',en:'The vertical garden is free outside; exhibitions are cheap.'}},
+ {id:'matadero',n:'Matadero Madrid',w:'Matadero_Madrid',es:'Matadero_Madrid',lat:40.3920,lng:-3.6975,c:['museo','ninos'],free:1,st:'Legazpi',web:'https://www.mataderomadrid.org',
+  d:{es:'Antiguo matadero convertido en centro cultural: exposiciones, cine, mercados y actividades para niños.',en:'Former slaughterhouse turned arts centre with shows and family activities.'},
+  tip:{es:'Entrar a los espacios es gratis; algunas actividades se pagan. Queda junto a Madrid Río.',en:'Free to enter; some activities paid. Next to Madrid Río.'}},
+ {id:'letras',n:'Barrio de las Letras',w:'Barrio_de_las_Letras',es:'Barrio_de_las_Letras',lat:40.4140,lng:-3.6985,c:['barrio'],free:1,st:'Antón Martín',web:'',
+  d:{es:'Donde vivieron Cervantes, Lope de Vega y Quevedo. Calles con frases de sus obras escritas en el suelo.',en:'Where Cervantes and Lope de Vega lived; quotes written on the pavement.'},
+  tip:{es:'Busca las citas literarias en la calle Huertas.',en:'Look for the quotes on Calle Huertas.'}},
+ {id:'malasana',n:'Malasaña',w:'Malasaña',es:'Malasaña',lat:40.4260,lng:-3.7040,c:['barrio'],free:1,st:'Tribunal / Noviciado',web:'',
+  d:{es:'El barrio joven y alternativo: tiendas vintage, cafés y vida nocturna alrededor de la plaza del Dos de Mayo.',en:'Young, alternative area with vintage shops and nightlife.'},
+  tip:{es:'Buen sitio para tomar algo por la tarde.',en:'Great for an evening drink.'}},
+ {id:'latina',n:'La Latina',w:'La_Latina',es:'Barrio_de_La_Latina',lat:40.4115,lng:-3.7090,c:['barrio'],free:1,st:'La Latina',web:'',
+  d:{es:'Barrio castizo de tapas: la Cava Baja está llena de bares. Los domingos se llena después del Rastro.',en:'Traditional tapas area around Cava Baja.'},
+  tip:{es:'Haz "ruta de tapas": una caña y una tapa en cada bar.',en:'Do a tapas crawl: one drink and tapa per bar.'}},
+ {id:'lavapies',n:'Lavapiés',w:'Lavapiés',es:'Lavapiés',lat:40.4087,lng:-3.7010,c:['barrio'],free:1,st:'Lavapiés',web:'',
+  d:{es:'El barrio más multicultural del centro: comida de todo el mundo, teatros pequeños y ambiente de barrio.',en:'Central Madrid\'s most multicultural area.'},
+  tip:{es:'Buenos restaurantes baratos de muchas cocinas.',en:'Cheap restaurants of many cuisines.'}},
+ {id:'anden0',n:'Andén 0 — Estación de Chamberí',w:'Chamberí_(Madrid_Metro)',es:'Estación_de_Chamberí',lat:40.4325,lng:-3.6990,c:['museo','ninos'],free:1,st:'Iglesia / Bilbao',web:'https://www.metromadrid.es',
+  d:{es:'Una "estación fantasma" del metro de 1919, conservada con sus anuncios de época. Los trenes de la línea 1 pasan sin parar.',en:'A 1919 "ghost" metro station preserved with vintage ads.'},
+  tip:{es:'Entrada gratis; consulta los horarios de apertura.',en:'Free; check opening hours.'}},
+ {id:'botanico',n:'Real Jardín Botánico',w:'Royal_Botanical_Garden_of_Madrid',es:'Real_Jardín_Botánico_de_Madrid',lat:40.4110,lng:-3.6910,c:['parque'],free:0,st:'Atocha',web:'https://www.rjb.csic.es',
+  d:{es:'Jardín del siglo XVIII junto al Prado, con miles de especies de plantas.',en:'18th-century garden beside the Prado.'},
+  tip:{es:'Entrada económica; muy agradable en primavera.',en:'Cheap entry; lovely in spring.'}},
+ {id:'faro',n:'Faro de Moncloa',w:'Faro_de_Moncloa',es:'Faro_de_Moncloa',lat:40.4370,lng:-3.7215,c:['vista'],free:0,st:'Moncloa',web:'',
+  d:{es:'Torre mirador de 110 metros con vista de 360° sobre Madrid y la sierra.',en:'A 110-metre viewing tower with 360° views.'},
+  tip:{es:'De pago. Mejor en día despejado.',en:'Paid. Best on a clear day.'}},
+ {id:'toledo',n:'Toledo',w:'Toledo,_Spain',es:'Toledo',lat:39.8628,lng:-4.0273,c:['excursion'],free:0,st:'Tren desde Atocha / bus desde Plaza Elíptica',web:'',
+  d:{es:'La "ciudad de las tres culturas": catedral, sinagogas y murallas sobre el río Tajo.',en:'The "city of three cultures" above the Tagus river.'},
+  tip:{es:'El tren rápido tarda unos 35 minutos; compra el billete con antelación para que salga más barato.',en:'Fast train ~35 min; book ahead.'}},
+ {id:'segovia',n:'Segovia',w:'Segovia',es:'Segovia',lat:40.9481,lng:-4.1184,c:['excursion'],free:0,st:'Tren desde Chamartín / bus desde Moncloa',web:'',
+  d:{es:'El acueducto romano, el Alcázar que parece de cuento y el cochinillo asado.',en:'Roman aqueduct, fairy-tale Alcázar and roast suckling pig.'},
+  tip:{es:'Lleva abrigo: hace más frío que en Madrid.',en:'Bring a jacket: colder than Madrid.'}},
+ {id:'escorial',n:'Monasterio de El Escorial',w:'El_Escorial',es:'Real_Monasterio_de_San_Lorenzo_de_El_Escorial',lat:40.5891,lng:-4.1477,c:['excursion','monu'],free:2,st:'Cercanías C8 / bus desde Moncloa',web:'https://www.patrimonionacional.es',
+  d:{es:'Monasterio y palacio de Felipe II en la sierra, Patrimonio de la Humanidad.',en:'Philip II\'s monastery-palace in the mountains (UNESCO).'},
+  tip:{es:'Como el Palacio Real, tiene horas gratis para iberoamericanos y residentes en la UE: lleva el pasaporte.',en:'Free hours for Ibero-American citizens and EU residents — bring your passport.'}},
+ {id:'tetuan',n:'Tetuán (Bravo Murillo)',w:'Tetuán_(Madrid)',es:'Distrito_de_Tetuán',lat:40.4545,lng:-3.7035,c:['latino','barrio'],free:1,st:'Tetuán / Estrecho',web:'',
+  d:{es:'Uno de los barrios con más vida latina de Madrid: restaurantes colombianos, dominicanos y venezolanos, peluquerías y envíos de dinero.',en:'One of Madrid\'s liveliest Latin areas: Colombian, Dominican and Venezuelan food.'},
+  tip:{es:'Recorre la calle Bravo Murillo entre Cuatro Caminos y Plaza de Castilla.',en:'Walk Bravo Murillo street from Cuatro Caminos to Plaza de Castilla.'}},
+ {id:'maravillas',n:'Mercado de Maravillas',w:'Mercado_de_Maravillas',es:'Mercado_de_Maravillas',lat:40.4495,lng:-3.7035,c:['latino','mercado'],free:1,st:'Cuatro Caminos / Alvarado',web:'',
+  d:{es:'Uno de los mercados municipales más grandes de Madrid, con puestos de productos latinos.',en:'One of Madrid\'s biggest municipal markets, with Latin produce.'},
+  tip:{es:'Aquí encuentras plátano, yuca, ají y más productos de casa.',en:'Find plantain, cassava and chilli here.'}},
+ {id:'usera',n:'Usera',w:'Usera',es:'Usera',lat:40.3850,lng:-3.7070,c:['latino','barrio'],free:1,st:'Usera / Plaza Elíptica',web:'',
+  d:{es:'Barrio del sur muy multicultural, con comunidad latina y la mayor zona de comida china de Madrid.',en:'Multicultural southern area with a Latin community and Madrid\'s Chinatown.'},
+  tip:{es:'Buen sitio para comer barato y encontrar tiendas latinas.',en:'Cheap eats and Latin shops.'}},
+ {id:'vallecas',n:'Puente de Vallecas',w:'Puente_de_Vallecas',es:'Puente_de_Vallecas',lat:40.3913,lng:-3.6596,c:['latino','barrio'],free:1,st:'Nueva Numancia / Portazgo',web:'',
+  d:{es:'Barrio obrero con orgullo propio y mucha comunidad latinoamericana. Aquí juega el Rayo Vallecano.',en:'Proud working-class district with a large Latin American community.'},
+  tip:{es:'Ambiente de barrio auténtico y comercios latinos en la avenida de la Albufera.',en:'Authentic local vibe; Latin shops along Avenida de la Albufera.'}}
+];
+const ITINS = [
+ {id:'clasico',ic:'👑',n:{es:'Madrid clásico',en:'Classic Madrid'},s:{es:'Lo imperdible, todo a pie',en:'Must-sees on foot'},stops:['sol','mayor','sanmiguel','almudena','palacio','debod']},
+ {id:'gratis',ic:'🆓',n:{es:'Madrid gratis',en:'Free Madrid'},s:{es:'Un día sin pagar entradas',en:'A day with no tickets'},stops:['sol','granvia','cibeles','alcala','retiro']},
+ {id:'arte',ic:'🖼️',n:{es:'Paseo del Arte',en:'Art Walk'},s:{es:'Los tres grandes museos',en:'The three great museums'},stops:['thyssen','prado','botanico','caixa','reina']},
+ {id:'ninos',ic:'🧒',n:{es:'Con niños',en:'With kids'},s:{es:'Río, teleférico y animales',en:'River, cable car and animals'},stops:['madridrio','teleferico','zoo','atracciones']},
+ {id:'domingo',ic:'🛍️',n:{es:'Domingo de Rastro',en:'Rastro Sunday'},s:{es:'Mercadillo, tapas y parque',en:'Flea market, tapas, park'},stops:['rastro','latina','letras','retiro']},
+ {id:'latino',ic:'🫓',n:{es:'Ruta latina',en:'Latin route'},s:{es:'Sabor de casa',en:'A taste of home'},stops:['tetuan','maravillas','usera','vallecas']}
+];
+let plFilter='all', plOrder=null;
+const plMine = ()=>store.get('pl',{}); // {id:'want'|'done'}
+function plTag(p){ return p.free===1?`<span class="pill ok">${L({es:'GRATIS',en:'FREE'})}</span>`: p.free===2?`<span class="pill warn">${L({es:'Gratis a ciertas horas',en:'Free at set times'})}</span>`:`<span class="pill">${L({es:'De pago',en:'Paid'})}</span>`; }
+function renderPlaces(){
+  const mine=plMine(), q=($('#pl-q').value||'').trim().toLowerCase();
+  $('#pl-chips').innerHTML = Object.entries(PCATS).map(([k,c])=>`<button class="chip ${plFilter===k?'on':''}" onclick="plFilter='${k}';renderPlaces()">${c.ic} ${L(c.n)}</button>`).join('');
+  let list = LUGARES.filter(p=>{
+    if(plFilter==='free' && p.free!==1) return false;
+    if(plFilter==='fav' && !mine[p.id]) return false;
+    if(!['all','free','fav'].includes(plFilter) && !p.c.includes(plFilter)) return false;
+    if(q && !(p.n+' '+L(p.d)+' '+p.st).toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(plOrder) list.sort((a,b)=>plOrder[a.id]-plOrder[b.id]);
+  $('#st-total').textContent=LUGARES.length;
+  $('#st-free').textContent=LUGARES.filter(p=>p.free===1).length;
+  const v=Object.values(mine); $('#st-mine').textContent=`${v.filter(x=>x==='want').length}/${v.filter(x=>x==='done').length}`;
+  $('#places').innerHTML = list.length ? list.map(p=>{
+    const m=mine[p.id];
+    return `<article class="plc">
+      <div class="plc-img" id="pimg-${p.id}" onclick="openPlace('${p.id}')"><div class="ph-fb">📷</div>${m?`<span class="plc-mark">${m==='done'?'✓ '+L({es:'Ya fui',en:'Visited'}):'❤️ '+L({es:'Quiero ir',en:'Want to go'})}</span>`:''}</div>
+      <div class="plc-body">
+        <div class="row" style="justify-content:space-between;align-items:start"><h3 onclick="openPlace('${p.id}')" style="cursor:pointer">${esc(p.n)}</h3>${plTag(p)}</div>
+        <div class="small muted">🚇 ${esc(p.st)}${plOrder?` · ${plOrder[p.id]<1?Math.round(plOrder[p.id]*1000)+' m':plOrder[p.id].toFixed(1)+' km'}`:''}</div>
+        <p class="small mt">${esc(L(p.d))}</p>
+        <div class="row mt" style="flex-wrap:wrap;gap:6px">
+          <button class="btn sm red" onclick="openPlace('${p.id}')">${L({es:'Ver más',en:'More'})}</button>
+          <button class="btn sm ghost" onclick="routeTo('${p.id}')">🧭</button>
+          <button class="btn sm ghost" onclick="flyTo(${p.lat},${p.lng})">🗺️</button>
+          <button class="btn sm ghost" onclick="toggleMine('${p.id}')" title="${L({es:'Quiero ir / Ya fui',en:'Want / Visited'})}">${m==='want'?'❤️':m==='done'?'✅':'🤍'}</button>
+        </div>
+      </div></article>`;
+  }).join('') : `<p class="muted mt">${L({es:'No hay lugares con ese filtro.',en:'No places match.'})}</p>`;
+  wikiBatch(list.map(p=>p.w)).then(()=>list.forEach(async p=>{ try{ const src=await wikiImg(p.w,500,p.n+' Madrid'); const el=document.getElementById('pimg-'+p.id); if(src&&el){ const fb=el.querySelector('.ph-fb'); if(fb) fb.outerHTML=`<img alt="${esc(p.n)}" src="${src}" referrerpolicy="no-referrer">`; } }catch(e){} }));
+  $('#itins').innerHTML = ITINS.map(it=>`<button class="tile" onclick="showItin('${it.id}')"><span class="em">${it.ic}</span><b>${L(it.n)}</b><small>${L(it.s)} · ${it.stops.length} ${L({es:'paradas',en:'stops'})}</small><small class="muted">${it.stops.map(id=>LUGARES.find(p=>p.id===id).n).join(' → ')}</small></button>`).join('');
+}
+function toggleMine(id){ const m=plMine(); m[id] = !m[id]?'want': m[id]==='want'?'done':undefined; if(!m[id]) delete m[id]; store.set('pl',m); renderPlaces(); toast(m[id]==='want'?'❤️ '+L({es:'Guardado en "Quiero ir"',en:'Saved to "Want to go"'}):m[id]==='done'?'✅ '+L({es:'Marcado como visitado',en:'Marked visited'}):L({es:'Quitado de tu lista',en:'Removed'})); }
+function haversine(a,b,c,d){ const R=6371,r=x=>x*Math.PI/180; const dl=r(c-a),dn=r(d-b); const h=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dn/2)**2; return 2*R*Math.asin(Math.sqrt(h)); }
+async function sortNear(){
+  if(plOrder){ plOrder=null; renderPlaces(); return; }
+  try{ const c=await getPos(); plOrder={}; LUGARES.forEach(p=>plOrder[p.id]=haversine(c.latitude,c.longitude,p.lat,p.lng)); plFilter='all'; renderPlaces(); toast(L({es:'Ordenados del más cercano al más lejano',en:'Sorted by distance'})); }
+  catch(e){ toast(L({es:'Activa la ubicación del celular',en:'Turn on location'})); }
+}
+function routeTo(id){ const p=LUGARES.find(x=>x.id===id); closePlace(); go('transit'); $('#j-from').value=''; $('#j-to').value=`${p.lat},${p.lng}`; destLabel=p.n; planJourney(); }
+async function wikiSummary(p){
+  const lang = LANG==='es'?'es':'en', title = LANG==='es'?p.es:p.w;
+  const key='ws_'+lang+'_'+p.id, c=store.get(key,null); if(c) return c;
+  try{ const {data}=await getJSON(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`); if(data?.extract){ const r={x:data.extract,u:data.content_urls?.mobile?.page||''}; store.set(key,r); return r; } }catch(e){}
+  return null;
+}
+async function openPlace(id){
+  const p=LUGARES.find(x=>x.id===id), m=plMine()[id];
+  $('#pl-sheet').innerHTML = `<div class="sheet-img" id="sheet-img"><button class="sheet-x" onclick="closePlace()">✕</button></div>
+   <div style="padding:18px">
+    <div class="row" style="justify-content:space-between;align-items:start"><h2 style="font-size:1.6rem">${esc(p.n)}</h2>${plTag(p)}</div>
+    <div class="row mt" style="gap:6px"><button class="say" onclick="speak('${jsq(p.n)}')">🔊</button><span class="small muted">${L({es:'Escucha cómo se pronuncia',en:'Hear the pronunciation'})}</span></div>
+    <p class="mt">${esc(L(p.d))}</p>
+    <div class="notice mt">💡 ${esc(L(p.tip))}</div>
+    <p class="small mt">🚇 <b>${L({es:'Estación',en:'Station'})}:</b> ${esc(p.st)}</p>
+    <div class="mt" id="sheet-wiki"><span class="spin"></span></div>
+    <div class="grid g2 keep mt" style="grid-template-columns:1fr 1fr">
+      <button class="btn red" onclick="routeTo('${p.id}')">🧭 ${L({es:'Cómo llegar',en:'Directions'})}</button>
+      <button class="btn" onclick="closePlace();flyTo(${p.lat},${p.lng})">🗺️ ${L({es:'Ver en mapa',en:'On the map'})}</button>
+      <button class="btn ghost" onclick="toggleMine('${p.id}');openPlace('${p.id}')">${m==='want'?'❤️ '+L({es:'Quiero ir',en:'Want to go'}):m==='done'?'✅ '+L({es:'Ya fui',en:'Visited'}):'🤍 '+L({es:'Guardar',en:'Save'})}</button>
+      ${p.web?`<a class="btn ghost" href="${p.web}" target="_blank" rel="noopener">🌐 ${L({es:'Web oficial',en:'Official site'})}</a>`:`<a class="btn ghost" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener">📍 Google Maps</a>`}
+    </div>
+   </div>`;
+  $('#pl-modal').classList.add('on'); document.body.style.overflow='hidden';
+  wikiImg(p.w,960,p.n+' Madrid').then(src=>{ if(src) $('#sheet-img').style.backgroundImage=`url("${src}")`; }).catch(()=>{});
+  const ws=await wikiSummary(p);
+  const box=$('#sheet-wiki'); if(!box) return;
+  box.innerHTML = ws ? `<h3>📖 ${L({es:'Un poco de historia',en:'A bit of history'})}</h3><p class="small mt">${esc(ws.x)}</p>${ws.u?`<a class="small" href="${ws.u}" target="_blank" rel="noopener">Wikipedia →</a>`:''}` : '';
+}
+function closePlace(){ $('#pl-modal').classList.remove('on'); document.body.style.overflow=''; }
+let itinLayer=null;
+function showItin(id){
+  const it=ITINS.find(x=>x.id===id); go('map');
+  setTimeout(()=>{
+    if(!L_||!map) return;
+    if(itinLayer) map.removeLayer(itinLayer);
+    itinLayer=L_.layerGroup().addTo(map);
+    const pts=it.stops.map(s=>LUGARES.find(p=>p.id===s));
+    L_.polyline(pts.map(p=>[p.lat,p.lng]),{color:'#EB0A1E',weight:5,dashArray:'8 8'}).addTo(itinLayer);
+    pts.forEach((p,i)=>L_.marker([p.lat,p.lng],{icon:L_.divIcon({className:'',html:`<div class="num">${i+1}</div>`,iconSize:[28,28],iconAnchor:[14,14]})}).addTo(itinLayer).bindPopup(`<b>${i+1}. ${esc(p.n)}</b><br><small>${esc(L(p.tip))}</small><br><button class="btn sm red mt" onclick="openPlace('${p.id}')">${L({es:'Ver más',en:'More'})}</button>`));
+    map.fitBounds(L_.latLngBounds(pts.map(p=>[p.lat,p.lng])),{padding:[40,40]});
+    $('#map-info').innerHTML = `<div class="card"><h3>${it.ic} ${L(it.n)}</h3><ol class="mt" style="padding-left:20px">${pts.map(p=>`<li><a href="javascript:openPlace('${p.id}')">${esc(p.n)}</a> <small class="muted">— 🚇 ${esc(p.st)}</small></li>`).join('')}</ol><button class="btn sm ghost mt" onclick="map.removeLayer(itinLayer);document.getElementById('map-info').innerHTML=''">✕ ${L({es:'Quitar ruta',en:'Clear route'})}</button></div>`;
+  },300);
+}
+
+/* =========================================================
+   SALUD (SERMAS)
+   ========================================================= */
+const LADDER = [
+ ['💊',{es:'Farmacia',en:'Pharmacy'},{es:'Resfriado, dolor de cabeza, alergias, picaduras, dolor de garganta. Sin cita. De noche siempre hay una "farmacia de guardia" abierta cerca.',en:'Colds, headaches, allergies, sore throats. No appointment. A duty pharmacy is always open at night.'},'#0A8A3A'],
+ ['🩺',{es:'Centro de salud (médico de cabecera)',en:'Health centre (GP)'},{es:'Consultas que no son urgentes, recetas, vacunas y remisión al especialista. Necesitas la tarjeta sanitaria; la cita se pide en la app o la web de la Comunidad de Madrid.',en:'Non-urgent care, prescriptions, vaccines, referrals. You need the health card; book via the Comunidad de Madrid app or website.'},'#0067B1'],
+ ['🏥',{es:'Urgencias extrahospitalarias (SUAP)',en:'Out-of-hours urgent care (SUAP)'},{es:'Cuando tu centro de salud está cerrado (noches, fines de semana) y no es una emergencia grave.',en:'When your health centre is closed and it isn\'t life-threatening.'},'#C77700'],
+ ['🚑',{es:'Urgencias del hospital o 112',en:'Hospital A&E or 112'},{es:'Solo emergencias: dolor de pecho, dificultad para respirar, desmayo, sangrado fuerte, señales de infarto o ictus. Ver hospitales en el mapa.',en:'Emergencies only: chest pain, breathing trouble, fainting, heavy bleeding, stroke signs.'},'#EB0A1E']
+];
+const HEALTHACC = [
+ {t:{es:'💳 Cómo sacar la tarjeta sanitaria',en:'💳 Getting your health card'},b:{es:'<ol><li>Empadrónate primero.</li><li>Ve al centro de salud que te corresponde por tu dirección con el pasaporte (o NIE/TIE) y el volante de empadronamiento.</li><li>Si trabajas, lleva también tu número de Seguridad Social.</li><li>Mientras llega la tarjeta, te dan un documento provisional para que te atiendan.</li></ol>',en:'<ol><li>Register on the padrón first.</li><li>Go to your local health centre with passport/NIE and padrón certificate.</li><li>If employed, bring your Social Security number.</li><li>You get a temporary document while the card arrives.</li></ol>'}},
+ {t:{es:'📄 ¿Y si no tengo papeles?',en:'📄 What if I\'m undocumented?'},b:{es:'<p>Desde 2018 la ley española reconoce el derecho a la sanidad pública a las personas extranjeras que viven en España aunque no tengan autorización de residencia, cumpliendo unos requisitos. En Madrid se tramita en el centro de salud. Las urgencias, el embarazo, el parto y la atención a menores están garantizados siempre. Si te ponen trabas, pide ayuda a Médicos del Mundo, Cruz Roja o Cáritas.</p>',en:'<p>Since 2018 Spanish law grants public healthcare to foreigners living in Spain without a residence permit, subject to conditions. Emergencies, pregnancy and children\'s care are always guaranteed.</p>'}},
+ {t:{es:'🧳 Si vienes de turista',en:'🧳 If you are a tourist'},b:{es:'<p>Los turistas no tienen tarjeta sanitaria. En urgencias te atienden, pero te pueden cobrar. Viaja siempre con seguro médico de viaje y guarda el teléfono de asistencia del seguro.</p>',en:'<p>Tourists have no health card. A&E will treat you but may bill you. Always travel with insurance.</p>'}},
+ {t:{es:'🧠 Salud mental y soledad',en:'🧠 Mental health & loneliness'},b:{es:'<p>Migrar es duro y es normal sentirse mal. Habla con tu médico de cabecera, que puede derivarte a psicología. Si estás pasando un momento muy difícil, llama al <b>024</b> (gratis, 24 h) o al Teléfono de la Esperanza (717 003 717).</p>',en:'<p>Talk to your GP for a referral. In a crisis call <b>024</b> (free, 24/7).</p>'}},
+ {t:{es:'🤰 Embarazo y niños',en:'🤰 Pregnancy & children'},b:{es:'<ul class="dots"><li>Si estás embarazada, ve al centro de salud lo antes posible: el seguimiento es gratuito.</li><li>Las vacunas del calendario infantil son gratis.</li><li>El colegio es obligatorio de 6 a 16 años y gratuito en los públicos. Los niños pueden matricularse en cualquier momento del curso, tengan o no papeles: pregunta en la Comunidad de Madrid o en el colegio más cercano.</li></ul>',en:'<ul class="dots"><li>Pregnancy care is free — go early.</li><li>Children\'s vaccines are free.</li><li>School is compulsory 6–16 and free in public schools; children can enrol any time, papers or not.</li></ul>'}},
+ {t:{es:'🦷 Dentista',en:'🦷 Dentist'},b:{es:'<p>La sanidad pública cubre poco del dentista en adultos (sobre todo extracciones y urgencias). Casi todo se hace en clínicas privadas: pide presupuesto por escrito y compara.</p>',en:'<p>Public coverage for adult dentistry is limited; most is private. Get written quotes.</p>'}}
+];
+
+/* =========================================================
+   TRABAJO Y ESTUDIO
+   ========================================================= */
+const WORKACC = [
+ {t:{es:'✅ ¿Puedo trabajar?',en:'✅ Can I work?'},b:{es:'<p>Solo con una autorización que lo permita (residencia y trabajo, estudiante hasta 30 h/semana, etc.). Como turista <b>no se puede trabajar</b>. Ojo: tener NIE no significa tener permiso. Si ya estás trabajando sin contrato, guarda pruebas (mensajes, pagos): pueden servir para un arraigo.</p>',en:'<p>Only with a permit that allows it. Tourists can\'t work, and an NIE is not a work permit. If you work informally, keep evidence.</p>'}},
+ {t:{es:'💶 Tus derechos básicos',en:'💶 Your basic rights'},b:{es:'<ul class="dots"><li>Salario mínimo 2026: <b>1.221 € al mes en 14 pagas</b> (17.094 € al año) a jornada completa.</li><li>Empleadas de hogar por horas: mínimo <b>9,55 € por hora</b> trabajada; también deben estar dadas de alta y tienen derecho a paro.</li><li>Alta en la Seguridad Social desde el primer día.</li><li>Contrato y nómina por escrito.</li><li>30 días naturales de vacaciones pagadas al año.</li><li>Nadie puede quedarse con tu pasaporte.</li></ul>',en:'<ul class="dots"><li>2026 minimum wage: <b>€1,221/month × 14</b> (€17,094/year) full-time.</li><li>Hourly domestic workers: <b>€9.55/h</b>.</li><li>Social Security registration from day one, written contract and payslip, 30 calendar days\' paid holiday.</li></ul>'}},
+ {t:{es:'🔎 Dónde buscar trabajo',en:'🔎 Where to look'},b:{es:'<ul class="dots"><li>Portales: InfoJobs, Indeed, LinkedIn y el portal de empleo de la Comunidad de Madrid.</li><li>Empresas de trabajo temporal (ETT) para hostelería, logística, limpieza y construcción.</li><li>Cruz Roja, Accem y Cáritas tienen programas de empleo gratuitos.</li><li>En España el currículum suele llevar foto, es de 1–2 páginas y se adjunta una carta corta.</li></ul>',en:'<ul class="dots"><li>InfoJobs, Indeed, LinkedIn, regional job portal; temp agencies; NGO job programmes. Spanish CVs often include a photo.</li></ul>'}},
+ {t:{es:'📚 Estudiar gratis',en:'📚 Studying for free'},b:{es:'<ul class="dots"><li>Los <b>Centros de Educación de Personas Adultas (CEPA)</b> ofrecen cursos gratuitos, incluida la ESO para adultos.</li><li>La Formación Profesional (FP) pública es gratuita o muy barata y tiene mucha salida laboral.</li><li>Las bibliotecas municipales son gratis: wifi, computadores y clubes de lectura.</li></ul>',en:'<ul class="dots"><li>Adult education centres (CEPA) are free. Public vocational training (FP) is free or cheap. Libraries are free.</li></ul>'}},
+ {t:{es:'🎓 Homologar mi título',en:'🎓 Getting my degree recognised'},b:{es:'<p>Antes de viajar, apostilla en Colombia (Cancillería) tus títulos y notas. Los títulos universitarios se homologan o equivalen ante el Ministerio de Ciencia, Innovación y Universidades; el bachillerato, ante el Ministerio de Educación. Las profesiones reguladas (medicina, enfermería, derecho…) exigen homologación antes de ejercer.</p>',en:'<p>Apostille your diplomas at home before travelling. University degrees are recognised by the Ministry of Universities; regulated professions require recognition before practising.</p>'}},
+ {t:{es:'🚗 Licencia de conducción',en:'🚗 Driving licence'},b:{es:'<p>Como turista puedes manejar con tu licencia colombiana. Si te haces residente, consulta en la DGT (dgt.es) el canje de tu licencia por la española: hay plazos que conviene no dejar pasar.</p>',en:'<p>Tourists can drive with their licence. Once resident, check licence exchange rules at dgt.es.</p>'}}
+];
+const SMI_HOUR = 17094/(40*52); // ≈ 8,22 €/h a jornada completa con pagas prorrateadas
+function renderPay(){
+  const r=+$('#pay-rate').value||0, h=+$('#pay-hours').value||0, wk=r*h, mo=wk*52/12, yr=wk*52;
+  const low = r>0 && r<SMI_HOUR;
+  const e=n=>n.toLocaleString(LANG==='es'?'es-ES':'en-GB',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+  $('#pay-out').innerHTML = `<div class="arr"><span>${L({es:'Por semana',en:'Per week'})}</span><b>${e(wk)}</b></div><div class="arr"><span>${L({es:'Por mes (aprox.)',en:'Per month (approx.)'})}</span><b>${e(mo)}</b></div><div class="arr"><span>${L({es:'Por año',en:'Per year'})}</span><b>${e(yr)}</b></div>${RATES?`<div class="arr"><span>${L({es:'Al mes en pesos',en:'Monthly in COP'})}</span><b>${fmt(mo*RATES.COP,'COP')}</b></div>`:''}
+   <p class="small muted mt">${L({es:'Sueldo bruto: antes de descontar Seguridad Social e IRPF.',en:'Gross pay, before Social Security and income tax.'})}</p>
+   ${low?`<div class="notice red mt">⚠️ ${L({es:'Este pago por hora está por debajo del salario mínimo 2026 a jornada completa (unos 8,22 €/h con las pagas extra repartidas). Para empleo del hogar por horas el mínimo es 9,55 €/h. Consulta a un sindicato o a la Inspección de Trabajo.',en:'Below the 2026 full-time minimum wage (~€8.22/h incl. extra payments). Hourly domestic work minimum: €9.55/h.'})}</div>`:''}`;
+}
+
+/* =========================================================
+   VIVIENDA
+   ========================================================= */
+const REDFLAGS = [
+ {es:'Te piden señal, reserva o fianza antes de ver el piso.',en:'Deposit or "reservation" before viewing.'},
+ {es:'El "dueño" está fuera de España y te manda las llaves por mensajería.',en:'The "owner" is abroad and will courier the keys.'},
+ {es:'El precio es demasiado barato para la zona.',en:'Too cheap for the area.'},
+ {es:'Pago solo en efectivo, por giro o a una cuenta extranjera, sin recibo.',en:'Cash, money transfer or foreign account only, no receipt.'},
+ {es:'No hay contrato escrito o no te dejan empadronarte.',en:'No written contract, or you can\'t register on the padrón.'}
+];
+const HOUSINGACC = [
+ {t:{es:'🔎 Dónde buscar',en:'🔎 Where to look'},b:{es:'<ul class="dots"><li><b>Pisos:</b> Idealista, Fotocasa, Habitaclia.</li><li><b>Habitaciones:</b> Badi e Idealista (sección habitaciones).</li><li>Los grupos de latinos en Facebook ayudan, pero ahí hay muchas estafas: nunca pagues sin ver.</li><li>Zonas más económicas y bien conectadas: Tetuán, Usera, Carabanchel, Puente de Vallecas, Villaverde, o municipios del sur con Cercanías.</li></ul>',en:'<ul class="dots"><li>Flats: Idealista, Fotocasa, Habitaclia. Rooms: Badi, Idealista. Never pay before viewing.</li></ul>'}},
+ {t:{es:'💶 Fianza y costos',en:'💶 Deposit and costs'},b:{es:'<ul class="dots"><li>En alquiler de vivienda la fianza legal es de <b>1 mes</b>, y las garantías adicionales no pueden pasar de 2 meses más.</li><li>Desde la Ley de Vivienda de 2023, los honorarios de la inmobiliaria los paga el propietario, no tú.</li><li>El propietario debe depositar la fianza en la Comunidad de Madrid.</li><li>Pregunta qué incluye: luz, agua, gas, internet y comunidad.</li><li>Pide recibo de todo lo que pagues.</li></ul>',en:'<ul class="dots"><li>Legal deposit: 1 month, extra guarantees max 2 months.</li><li>Since 2023 agency fees are paid by the landlord.</li><li>Ask what bills are included; get receipts.</li></ul>'}},
+ {t:{es:'📝 Contrato y padrón',en:'📝 Contract and padrón'},b:{es:'<p>Exige contrato por escrito, aunque sea de habitación. Pregunta antes si te dejarán empadronarte: sin padrón no puedes sacar la tarjeta sanitaria ni sumar tiempo para el arraigo. Si subalquilas una habitación, el contrato principal debe permitirlo.</p>',en:'<p>Always get a written contract and confirm you can register on the padrón.</p>'}},
+ {t:{es:'🏠 Problemas con el casero',en:'🏠 Problems with your landlord'},b:{es:'<p>Si no te devuelven la fianza, no arreglan desperfectos o te quieren echar de un día para otro, consulta en la Oficina Municipal de Información al Consumidor (OMIC), en el Sindicato de Inquilinas o en una ONG. Que te echen requiere un proceso judicial: no pueden cambiarte la cerradura sin más.</p>',en:'<p>Contact the consumer office (OMIC), the tenants\' union or an NGO. Eviction requires a court process.</p>'}}
+];
+const VIEWLIST = [
+ {es:'¿Hay humedad o moho en paredes y ventanas?',en:'Damp or mould?'},{es:'¿Funcionan la calefacción y el agua caliente? (en invierno hace frío)',en:'Heating and hot water work?'},
+ {es:'¿Hay aire acondicionado o ventilador? (en verano pasa de 35 °C)',en:'Air-con or fan? (summer goes above 35 °C)'},{es:'¿Cuántas personas comparten baño y cocina?',en:'How many share bathroom/kitchen?'},
+ {es:'¿Qué gastos incluye el precio?',en:'What bills are included?'},{es:'¿A cuántos minutos queda el metro o el Cercanías?',en:'Distance to metro or train?'},
+ {es:'¿Me dejan empadronarme?',en:'Can I register on the padrón?'},{es:'Toma fotos y video del estado de la habitación el día que entres.',en:'Photograph the room on move-in day.'}
+];
+
+/* =========================================================
+   COMIDA LATINA
+   ========================================================= */
+const FOODAREAS = [
+ ['tetuan','🇨🇴',{es:'Tetuán y Bravo Murillo',en:'Tetuán & Bravo Murillo'},{es:'Restaurantes colombianos, dominicanos y venezolanos, panaderías con pandebono y buñuelos, y tiendas con productos de casa.',en:'Colombian, Dominican and Venezuelan restaurants and bakeries.'}],
+ ['maravillas','🥭',{es:'Mercado de Maravillas',en:'Maravillas Market'},{es:'Plátano, yuca, ñame, mango, ají y carnicerías con cortes parecidos a los nuestros.',en:'Plantain, cassava, yam, mango and Latin-style butchers.'}],
+ ['usera','🍜',{es:'Usera',en:'Usera'},{es:'Tiendas latinas y comida barata de todo el mundo en el sur de la ciudad.',en:'Latin shops and cheap world food in the south.'}],
+ ['vallecas','🫘',{es:'Puente de Vallecas',en:'Puente de Vallecas'},{es:'Negocios latinos de barrio, restaurantes y envíos de dinero.',en:'Local Latin businesses and restaurants.'}]
+];
+const FOODWORDS = [['Patata','Papa','Potato'],['Plátano','Banano','Banana'],['Plátano macho','Plátano para cocinar (verde o maduro)','Plantain'],['Alubias / judías','Fríjoles','Beans'],['Judías verdes','Habichuelas','Green beans'],['Guisantes','Arvejas','Peas'],['Melocotón','Durazno','Peach'],['Zumo','Jugo','Juice'],['Nata','Crema de leche','Cream'],['Carne picada','Carne molida','Mince'],['Pimiento','Pimentón','Bell pepper'],['Gambas','Camarones','Prawns'],['Tarta','Torta, ponqué','Cake'],['Bollería','Pan dulce','Pastries'],['Cacahuetes','Maní','Peanuts'],['Calabacín','Zucchini','Courgette'],['Harina de maíz precocida','Harina para arepas','Pre-cooked maize flour'],['Panela','Panela (en la sección internacional)','Panela (unrefined cane sugar)']];
+
+/* =========================================================
+   CLIMA, MALETA Y FESTIVOS
+   ========================================================= */
+const MONTHS = {es:['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],en:['January','February','March','April','May','June','July','August','September','October','November','December']};
+const CLIM = [[10,3],[12,4],[16,6],[18,8],[22,11],[28,16],[32,19],[31,19],[26,16],[19,11],[13,6],[10,4]]; // promedios aproximados (°C)
+const DAYLIGHT = [9.5,10.5,12,13,14.5,15,14.5,13.5,12.5,11,10,9.5];
+function renderPack(){
+  const sel=$('#pack-month'); const cur=sel.value!==''?+sel.value:new Date().getMonth();
+  sel.innerHTML = MONTHS[LANG].map((m,i)=>`<option value="${i}" ${i===cur?'selected':''}>${m}</option>`).join('');
+  const [mx,mn]=CLIM[cur], cold=mx<=13, hot=mx>=28;
+  const items = [
+   cold?{es:'Abrigo grueso: las noches pueden bajar de 0 °C',en:'Warm coat: nights can drop below 0 °C'}:hot?{es:'Ropa fresca de algodón o lino',en:'Light cotton or linen clothes'}:{es:'Chaqueta ligera para la mañana y la noche',en:'Light jacket for mornings and evenings'},
+   cold?{es:'Gorro, bufanda y guantes',en:'Hat, scarf and gloves'}:{es:'Gafas de sol y gorra',en:'Sunglasses and a cap'},
+   hot?{es:'Protector solar y botella de agua',en:'Sunscreen and a water bottle'}:{es:'Sombrilla pequeña plegable',en:'Small folding umbrella'},
+   {es:'Zapatos cómodos: en Madrid se camina mucho',en:'Comfortable shoes: lots of walking'},
+   cold?{es:'Ropa térmica para usar por debajo',en:'Thermal base layers'}:{es:'Un saco o buzo ligero',en:'A light jumper'},
+   {es:'Adaptador de enchufe tipo C/F (dos patas redondas)',en:'Type C/F plug adapter'},
+   {es:'Crema hidratante y bálsamo de labios: el clima es muy seco',en:'Moisturiser and lip balm: very dry climate'}
+  ];
+  $('#pack-out').innerHTML = `<div class="grid g2 keep" style="grid-template-columns:1fr 1fr"><div class="stat"><b>${mx}° / ${mn}°</b><small>${L({es:'máx / mín promedio',en:'avg high / low'})}</small></div><div class="stat"><b>~${DAYLIGHT[cur]} h</b><small>${L({es:'de luz al día',en:'of daylight'})}</small></div></div>
+   <h3 class="mt">🧳 ${L({es:'Lleva en la maleta',en:'Pack'})}</h3><ul class="dots mt">${items.map(i=>`<li>${esc(L(i))}</li>`).join('')}</ul>
+   ${cur>=5&&cur<=7?`<div class="notice mt">${L({es:'🥵 En julio y agosto se pasan los 35 °C. Evita el sol entre las 14 y las 18 h y toma mucha agua.',en:'🥵 July and August often exceed 35 °C. Avoid the sun 14:00–18:00 and drink plenty of water.'})}</div>`:''}
+   ${cur>=11||cur<=1?`<div class="notice mt">${L({es:'❄️ En invierno amanece tarde y puede helar de noche, aunque los días suelen ser soleados.',en:'❄️ Winter mornings are dark and nights can freeze, but days are often sunny.'})}</div>`:''}`;
+  const max=34;
+  $('#clim').innerHTML = CLIM.map((c,i)=>`<div class="cl ${i===cur?'on':''}" onclick="document.getElementById('pack-month').value=${i};renderPack()"><div class="bar-wrap"><div class="cbar" style="height:${c[0]/max*100}%"><span>${c[0]}°</span></div></div><small>${MONTHS[LANG][i].slice(0,3)}</small></div>`).join('');
+}
+/* Festivos 2026 verificados (Ayuntamiento de Madrid). 2027 se carga en vivo (Nager.Date) */
+const HOL2026 = [
+ ['2026-11-02',{es:'Todos los Santos (trasladado del domingo 1)',en:'All Saints\' Day (moved from Sunday 1st)'}],
+ ['2026-11-09',{es:'Virgen de la Almudena (festivo local de la ciudad)',en:'Our Lady of La Almudena (city holiday)'}],
+ ['2026-12-07',{es:'Día de la Constitución (trasladado del domingo 6)',en:'Constitution Day (moved from Sunday 6th)'}],
+ ['2026-12-08',{es:'Inmaculada Concepción',en:'Immaculate Conception'}],
+ ['2026-12-25',{es:'Navidad',en:'Christmas Day'}]
+];
+const HOL_FALLBACK_2027 = [['2027-01-01',{es:'Año Nuevo',en:'New Year\'s Day'}],['2027-01-06',{es:'Epifanía del Señor (Reyes)',en:'Epiphany'}]];
+let HOLS=null;
+async function loadHols(){
+  let next=null;
+  try{ const {data}=await getJSON('https://date.nager.at/api/v3/PublicHolidays/2027/ES');
+    if(!Array.isArray(data)) throw 0;
+    next = data.filter(h=>h.global || (h.counties||[]).includes('ES-MD')).map(h=>[h.date,{es:h.localName,en:h.name}]);
+    store.set('hols27',next);
+  }catch(e){ next = store.get('hols27',null) || HOL_FALLBACK_2027; }
+  HOLS = [...HOL2026, ...next];
+  renderHols();
+}
+function renderHols(){
+  if(!HOLS) return;
+  const todayISO = new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid'}).format(new Date());
+  const up=HOLS.filter(h=>h[0]>=todayISO).sort((a,b)=>a[0]<b[0]?-1:1).slice(0,7);
+  $('#hols').innerHTML = up.map(h=>`<div class="arr"><span>${esc(L(h[1]))}</span><b style="font-weight:600;flex:none">${tz(new Date(h[0]+'T12:00:00Z'),'Europe/Madrid',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</b></div>`).join('') + `<p class="small muted mt">${L({es:'2026: calendario oficial del Ayuntamiento de Madrid. 2027: festivos nacionales y de la Comunidad (Nager.Date); los locales de la ciudad se publican más adelante.',en:'2026: official Madrid city calendar. 2027: national and regional holidays (Nager.Date); city holidays are published later.'})}</p>`;
+}
+
+function renderModules(){
+  renderPlaces();
+  $('#ladder').innerHTML = LADDER.map((s,i)=>`<div class="step"><div class="sn" style="background:${s[3]}">${s[0]}</div><div><b>${i+1}. ${esc(L(s[1]))}</b><div class="small muted">${esc(L(s[2]))}</div></div></div>`).join('') + `<p class="small muted mt">${L({es:'De arriba hacia abajo: de lo más leve a lo más grave.',en:'Top to bottom: least to most serious.'})}</p>`;
+  $('#papers-steps').innerHTML = PAPERS.map((s,i)=>`<div class="step"><div class="sn" style="background:${s[3]}">${s[0]}</div><div><b>${i+1}. ${esc(L(s[1]))}</b><div class="small muted">${esc(L(s[2]))}</div></div></div>`).join('');
+  renderAcc($('#papers-acc'),PAPERSACC);
+  renderAcc($('#health-acc'),HEALTHACC); renderAcc($('#work-acc'),WORKACC); renderPay();
+  $('#redflags').innerHTML = REDFLAGS.map(r=>`<li>${esc(L(r))}</li>`).join('');
+  renderAcc($('#housing-acc'),HOUSINGACC);
+  const vd=store.get('view',[]);
+  $('#viewlist').innerHTML = VIEWLIST.map((v,i)=>`<label class="chk ${vd.includes(i)?'done':''}"><input type="checkbox" ${vd.includes(i)?'checked':''} onchange="let d=store.get('view',[]);d=d.includes(${i})?d.filter(x=>x!==${i}):[...d,${i}];store.set('view',d);renderModules()"><span class="t">${esc(L(v))}</span></label>`).join('');
+  $('#food-areas').innerHTML = FOODAREAS.map(f=>`<div class="card"><div style="font-size:1.6rem">${f[1]}</div><h3 class="mt">${esc(L(f[2]))}</h3><p class="small muted">${esc(L(f[3]))}</p><div class="row mt" style="gap:6px"><button class="btn sm ghost" onclick="routeTo('${f[0]}')">🧭</button><button class="btn sm ghost" onclick="openPlace('${f[0]}')">${L({es:'Ver',en:'View'})}</button></div></div>`).join('');
+  $('#food-words').innerHTML = `<tr><th>${L({es:'En España',en:'In Spain'})}</th><th style="text-align:right">${L({es:'En casa',en:'English'})}</th></tr>` + FOODWORDS.map((w,i)=>`<tr><td><b>${esc(w[0])}</b> <button class="say" style="width:26px;height:26px;font-size:.7rem" onclick="speak(FOODWORDS[${i}][0])">🔊</button></td><td style="font-weight:400;text-align:right">${esc(LANG==='es'?w[1]:w[2])}</td></tr>`).join('');
+  renderPack(); renderHols();
+}
+
+/* ---------- Render all ---------- */
+function renderAll(){
+  renderFares(); renderAcc($('#how-acc'),HOW); renderLines(); renderSits(); renderSOS(); renderCheck(); renderAcc($('#visa-acc'),VISA);
+  $('#money-tips').innerHTML = MONEY_TIPS.map(t=>`<li>${esc(L(t))}</li>`).join('');
+  $('#culture').innerHTML = CULTURE.map(c=>`<div class="card"><div style="font-size:1.6rem">${c[0]}</div><h3 class="mt">${esc(L(c[1]))}</h3><p class="small muted">${esc(L(c[2]))}</p></div>`).join('');
+  renderAcc($('#safety'),SAFETY);
+  renderModules();
+  if(galDone) renderVideos();
+  if(map) renderChips();
+  if(RATES) renderFX(); if(WX) renderWeather();
+  tick();
+  $('#upd').textContent = tz(new Date(),'America/Bogota',{dateStyle:'long'});
+}
+
+/* ---------- PWA ---------- */
+let deferred=null;
+window.addEventListener('beforeinstallprompt',e=>{ e.preventDefault(); deferred=e; if(!store.get('noInstall',false)) $('#install').classList.add('on'); });
+$('#install-btn').onclick=async()=>{ if(!deferred) return; deferred.prompt(); await deferred.userChoice; deferred=null; $('#install').classList.remove('on'); };
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent), standalone=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+if(isIOS && !standalone && !store.get('iosHint',false)){ setTimeout(()=>{ toast(L({es:'En iPhone: toca Compartir → "Agregar a inicio" para instalar',en:'On iPhone: Share → "Add to Home Screen"'})); store.set('iosHint',true); },4000); }
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+
+/* ---------- Boot ---------- */
+applyLang(); renderAll();
+$('#my-addr').value = store.get('addr','');
+$('#fx-amt').addEventListener('input',renderFX); $('#fx-from').addEventListener('change',renderFX);
+$('#j-to').addEventListener('keydown',e=>{ if(e.key==='Enter') planJourney(); });
+setInterval(tick,15000);
+loadHero(); loadWeather(); loadRates(); loadHols();
+$('#pl-q').addEventListener('input',renderPlaces);
+['pay-rate','pay-hours'].forEach(id=>$('#'+id).addEventListener('input',renderPay));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closePlace(); });
+setTimeout(()=>$('#splash').classList.add('off'),900);
+const h=location.hash.slice(1); if(h && document.getElementById('v-'+h)) go(h);
+</script>
+</body>
+</html>
