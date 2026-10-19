@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Madrid para Latinos — Guía de supervivencia</title>
+<meta name="description" content="App bilingüe (español/inglés) para latinos que llegan a Madrid: mapa interactivo, metro y buses, centros de ayuda, papeles y empadronamiento, español de España para cada situación, emergencias y primeros pasos.">
+<meta name="theme-color" content="#EB0A1E">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Madrid Latinos">
+
+<!-- Open Graph / Twitter -->
+<meta property="og:title" content="Madrid para Latinos — Guía de supervivencia">
+<meta property="og:description" content="Mapa, metro y buses, ayuda gratuita, papeles, empadronamiento y el español de España para cada situación. En español e inglés.">
+<meta property="og:image" content="https://haroldco45.github.io/madrid-para-latinos/og-image.png">
+<meta property="og:url" content="https://haroldco45.github.io/madrid-para-latinos/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Madrid para Latinos — Guía de supervivencia">
+<meta name="twitter:description" content="Mapa, transporte, ayuda, papeles y español de España para latinos recién llegados a Madrid.">
+<meta name="twitter:image" content="https://haroldco45.github.io/madrid-para-latinos/og-image.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --red:#EB0A1E; --red-dark:#B30715; --ink:#0B0B0C; --ink-2:#3A3A3F; --muted:#6E6E76;
+  --line:#E6E6EA; --bg:#FFFFFF; --bg-2:#F5F5F7; --ok:#0A8A3A; --warn:#C77700;
+  --shadow:0 6px 24px rgba(0,0,0,.08); --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:'Barlow',system-ui,sans-serif;font-size:16px;line-height:1.45}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+a{color:var(--red);text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+h1,h2,h3{font-family:'Barlow Condensed','Barlow',sans-serif;letter-spacing:.2px;line-height:1.1}
+h2{font-size:1.7rem;text-transform:uppercase}
+h3{font-size:1.2rem}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+
+/* Header */
+header.top{position:sticky;top:0;z-index:1000;background:#fff;border-bottom:1px solid var(--line)}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;max-width:980px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:38px;height:38px;border-radius:10px;background:var(--red);color:#fff;display:grid;place-items:center;font-family:'Barlow Condensed';font-weight:800;font-size:1.05rem;flex:none}
+.brand b{font-family:'Barlow Condensed';font-size:1.25rem;text-transform:uppercase;display:block;line-height:1}
+.brand small{color:var(--muted);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.lang{display:flex;border:2px solid var(--ink);border-radius:999px;overflow:hidden;flex:none}
+.lang button{border:0;background:#fff;padding:6px 12px;font-weight:700;font-size:.85rem}
+.lang button.on{background:var(--ink);color:#fff}
+.clocks{display:flex;gap:8px;padding:0 16px 8px;max-width:980px;margin:0 auto;font-size:.82rem;color:var(--ink-2);flex-wrap:wrap}
+.clock{background:var(--bg-2);border-radius:999px;padding:3px 10px}
+.clock b{color:var(--ink)}
+
+/* Bottom nav */
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:1000;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+nav.tabs button{flex:1;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.72rem;font-weight:600;color:var(--muted);padding:4px 0}
+nav.tabs svg{width:24px;height:24px}
+nav.tabs button.on{color:var(--red)}
+nav.tabs button.sos{color:#fff}
+nav.tabs button.sos span.ic{background:var(--red);border-radius:50%;width:40px;height:40px;display:grid;place-items:center;margin-top:-18px;box-shadow:0 4px 14px rgba(235,10,30,.4)}
+nav.tabs button.sos em{color:var(--red);font-style:normal}
+
+section.view{display:none;padding:18px 0 30px}
+section.view.on{display:block}
+
+/* Hero */
+.hero{position:relative;border-radius:var(--r);overflow:hidden;min-height:260px;background:#111 center/cover no-repeat;color:#fff;display:flex;align-items:flex-end;margin-bottom:18px}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 20%,rgba(0,0,0,.78))}
+.hero .in{position:relative;z-index:1;padding:20px}
+.hero .kicker{display:inline-block;background:var(--red);padding:3px 10px;border-radius:4px;font-weight:700;font-size:.75rem;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.hero h1{font-size:2.3rem;text-transform:uppercase}
+.hero p{max-width:560px;opacity:.95;margin-top:6px}
+.credit{position:absolute;right:8px;top:8px;z-index:1;font-size:.65rem;background:rgba(0,0,0,.5);padding:2px 6px;border-radius:4px;color:#ddd}
+
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:700px){.g3{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:420px){.g2.keep{grid-template-columns:1fr 1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+.card.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.card.red{background:var(--red);color:#fff;border-color:var(--red)}
+.tile{display:flex;flex-direction:column;gap:6px;text-align:left;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);transition:transform .15s}
+.tile.hot{border:2px solid var(--red);background:#FFF5F6}
+.tile:active{transform:scale(.98)}
+.tile .em{font-size:1.6rem}
+.tile b{font-family:'Barlow Condensed';font-size:1.1rem;text-transform:uppercase}
+.tile small{color:var(--muted);font-size:.82rem}
+.sec-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:22px 0 10px;border-left:5px solid var(--red);padding-left:10px}
+.sec-head p{color:var(--muted);font-size:.9rem}
+.pill{display:inline-block;background:var(--bg-2);border-radius:999px;padding:3px 10px;font-size:.78rem;font-weight:600}
+.pill.red{background:#FDE7E9;color:var(--red-dark)}
+.pill.ok{background:#E3F5EA;color:var(--ok)}
+.pill.warn{background:#FFF1DC;color:var(--warn)}
+button.st{cursor:pointer;font-family:inherit;font-size:1rem;color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:10px;padding:11px 16px;font-weight:700;font-size:.95rem;background:var(--ink);color:#fff}
+.btn.red{background:var(--red)}
+.btn.ghost{background:#fff;color:var(--ink);border:2px solid var(--ink)}
+.btn.sm{padding:7px 12px;font-size:.85rem;border-radius:8px}
+.btn.block{width:100%}
+.btn:disabled{opacity:.5}
+input,select,textarea{font-family:inherit;font-size:1rem;border:2px solid var(--line);border-radius:10px;padding:10px 12px;width:100%;background:#fff;color:var(--ink)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--ink)}
+label.f{display:block;font-weight:600;font-size:.88rem;margin:10px 0 4px}
+.row{display:flex;gap:8px;align-items:center}
+.row > *{min-width:0}
+.mt{margin-top:12px}.mt2{margin-top:20px}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.notice{background:#FFF8E6;border:1px solid #F3D38A;border-radius:10px;padding:10px 12px;font-size:.88rem}
+.notice.red{background:#FDE7E9;border-color:#F5B2B8}
+ul.clean{list-style:none}
+ul.dots{padding-left:18px}
+ul.dots li{margin:4px 0}
+
+/* Weather / money widgets */
+.wx{display:flex;gap:14px;align-items:center}
+.wx .t{font-family:'Barlow Condensed';font-size:2.6rem;font-weight:800}
+.days{display:flex;gap:8px;margin-top:8px}
+.days div{flex:1;background:rgba(255,255,255,.08);border-radius:8px;padding:6px;text-align:center;font-size:.8rem}
+
+/* Map */
+#map{height:62vh;min-height:380px;border-radius:var(--r);border:1px solid var(--line);z-index:1}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:2px solid var(--ink);background:#fff;border-radius:999px;padding:6px 12px;font-weight:700;font-size:.82rem;white-space:nowrap}
+.chip.on{background:var(--ink);color:#fff}
+.leaflet-popup-content{font-family:'Barlow';font-size:.9rem}
+.leaflet-popup-content b{font-size:1rem}
+.pin{width:30px;height:30px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.pin span{transform:rotate(45deg);font-size:14px}
+
+/* Transport */
+.status-list{display:grid;gap:6px}
+.st{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--bg-2)}
+.st .bar{width:8px;align-self:stretch;border-radius:4px}
+.st .nm{font-weight:700;flex:1}
+.leg{display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line)}
+.leg:last-child{border-bottom:0}
+.leg .md{flex:none;width:34px;height:34px;border-radius:8px;background:var(--bg-2);display:grid;place-items:center;font-size:1.1rem}
+.arr{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.arr b.min{font-family:'Barlow Condensed';font-size:1.3rem;color:var(--red);flex:none}
+table.fares{width:100%;border-collapse:collapse;font-size:.92rem}
+table.fares td,table.fares th{padding:8px;border-bottom:1px solid var(--line);text-align:left}
+table.fares th{font-family:'Barlow Condensed';text-transform:uppercase;font-size:.85rem;color:var(--muted)}
+table.fares td:last-child{font-weight:700;text-align:right;white-space:nowrap}
+
+/* Phrases */
+.sit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.sit{background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px;text-align:left}
+.sit.on{border-color:var(--red);background:#FFF5F6}
+.sit .em{font-size:1.5rem}
+.sit b{display:block;font-size:.95rem;margin-top:4px}
+.dlg{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.bub{max-width:88%;border-radius:14px;padding:10px 12px;position:relative}
+.bub.A{background:var(--bg-2);align-self:flex-start;border-top-left-radius:4px}
+.bub.B{background:var(--ink);color:#fff;align-self:flex-end;border-top-right-radius:4px}
+.bub .who{font-size:.7rem;text-transform:uppercase;letter-spacing:.6px;opacity:.7;font-weight:700}
+.bub .en{font-weight:700;font-size:1.05rem}
+.bub .es{font-size:.9rem;opacity:.85;margin-top:2px}
+.bub .fon{font-size:.8rem;opacity:.65;font-style:italic;margin-top:2px}
+.say{border:0;background:var(--red);color:#fff;border-radius:999px;width:30px;height:30px;font-size:.85rem;flex:none}
+.bub .head{display:flex;justify-content:space-between;gap:8px;align-items:start}
+.pocket{display:grid;gap:8px}
+.pk{display:flex;gap:10px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:10px}
+.pk div{flex:1}
+.pk .en{font-weight:700}
+.pk .es{font-size:.85rem;color:var(--muted)}
+.showcard{position:fixed;inset:0;background:#fff;z-index:3000;display:none;flex-direction:column;justify-content:center;padding:28px;text-align:center}
+.showcard.on{display:flex}
+.showcard .big{font-family:'Barlow Condensed';font-weight:800;font-size:2.3rem;line-height:1.1}
+.showcard .addr{margin-top:18px;font-size:1.6rem;font-weight:700;color:var(--red)}
+
+/* SOS */
+.sos-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:560px){.sos-grid{grid-template-columns:1fr 1fr}}
+.call{display:flex;flex-direction:column;gap:2px;border-radius:12px;padding:14px;color:#fff;background:var(--ink)}
+.call.red{background:var(--red)}
+.call .n{font-family:'Barlow Condensed';font-size:2rem;font-weight:800;line-height:1}
+.call small{opacity:.85}
+.org{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.org:last-child{border-bottom:0}
+.org .ic{flex:none;width:44px;height:44px;border-radius:10px;background:#FDE7E9;display:grid;place-items:center;font-size:1.3rem}
+.org .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+details.acc{border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:#fff}
+details.acc summary{padding:12px 14px;font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:10px}
+details.acc summary::after{content:"+";color:var(--red);font-size:1.3rem;line-height:1}
+details.acc[open] summary::after{content:"–"}
+details.acc .body{padding:0 14px 14px}
+details.acc ol{padding-left:20px}
+details.acc ol li{margin:5px 0}
+
+/* checklist */
+.chk{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.chk input{width:22px;height:22px;flex:none;accent-color:var(--red);margin-top:2px}
+.chk.done .t{text-decoration:line-through;color:var(--muted)}
+.progress{height:8px;background:var(--bg-2);border-radius:99px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--red);transition:width .3s}
+
+/* Gallery */
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.ph{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:4/3;background:var(--bg-2)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph span{position:absolute;left:0;right:0;bottom:0;padding:16px 8px 6px;color:#fff;font-weight:700;font-size:.85rem;background:linear-gradient(transparent,rgba(0,0,0,.75))}
+.ph .ph-fb{display:grid;place-items:center;height:100%;font-size:2rem}
+.video{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#000}
+.video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vlink{display:flex;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:12px;color:var(--ink)}
+.vlink .play{flex:none;width:44px;height:44px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center}
+
+
+/* Lugares */
+.stat{background:var(--bg-2);border-radius:12px;padding:10px;text-align:center}
+.stat b{display:block;font-family:'Barlow Condensed';font-size:1.6rem;font-weight:800;color:var(--red)}
+.stat small{font-size:.75rem;color:var(--muted)}
+.places{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.plc{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.plc-img{position:relative;aspect-ratio:16/9;background:var(--bg-2);cursor:pointer}
+.plc-img img{width:100%;height:100%;object-fit:cover;display:block}
+.plc-img .ph-fb{height:100%;display:grid;place-items:center;font-size:2rem;opacity:.4}
+.plc-mark{position:absolute;left:8px;top:8px;background:#fff;color:var(--ink);font-weight:700;font-size:.75rem;padding:3px 8px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.plc-body{padding:12px 14px 14px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:2500;display:none;align-items:flex-end;justify-content:center}
+.modal.on{display:flex}
+.sheet{background:#fff;width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0}
+@media(min-width:700px){.modal{align-items:center}.sheet{border-radius:18px}}
+.sheet-img{position:relative;height:240px;background:#222 center/cover no-repeat}
+.sheet-x{position:absolute;right:10px;top:10px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:1rem}
+.num{width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font-weight:800;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+/* Salud */
+.ladder{display:grid;gap:10px}
+.step{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px}
+.step .sn{flex:none;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-size:1.3rem}
+/* Clima */
+.clim{display:grid;grid-template-columns:repeat(12,1fr);gap:4px;margin-top:12px;padding-top:22px;align-items:end}
+.cl{text-align:center;cursor:pointer}
+.cl .bar-wrap{height:110px;display:flex;align-items:flex-end}
+.cbar{width:100%;background:#F5B2B8;border-radius:6px 6px 0 0;position:relative;min-height:18px}
+.cbar span{position:absolute;top:-18px;left:0;right:0;font-size:.7rem;font-weight:700}
+.cl.on .cbar{background:var(--red)}
+.cl small{font-size:.66rem;color:var(--muted)}
+
+/* Panel (sub pages) */
+.back{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink);background:none;border:0;margin-bottom:10px;font-size:.95rem}
+
+footer.foot{border-top:1px solid var(--line);margin-top:30px;padding:18px 16px;text-align:center;font-size:.8rem;color:var(--muted)}
+footer.foot b{color:var(--ink)}
+.install{position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom));z-index:1500;background:var(--ink);color:#fff;border-radius:14px;padding:12px 14px;display:none;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+.install.on{display:flex}
+.install p{flex:1;font-size:.88rem}
+.toast{position:fixed;left:50%;top:80px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;z-index:4000;font-weight:600;display:none;max-width:90%}
+.toast.on{display:block}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.splash{position:fixed;inset:0;background:var(--red);color:#fff;z-index:5000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:opacity .5s}
+.splash h1{font-size:2.6rem;text-transform:uppercase}
+.splash small{opacity:.9}
+.splash.off{opacity:0;pointer-events:none}
+</style>
+<body>
+
+<div class="splash" id="splash">
+  <div class="logo" style="width:72px;height:72px;font-size:1.8rem;background:#fff;color:var(--red);border-radius:18px">MxL</div>
+  <h1>Madrid para Latinos</h1>
+  <small>Desarrollada por Vibras Positivas HM</small>
+</div>
+
+<header class="top">
+  <div class="top-row">
+    <div class="brand">
+      <div class="logo">MxL</div>
+      <div style="min-width:0"><b data-t="appName">Madrid para Latinos</b><small data-t="tagline">Tu guía para empezar en la ciudad</small></div>
+    </div>
+    <div class="lang" role="group" aria-label="Idioma">
+      <button id="lang-es" class="on" onclick="setLang('es')">ES</button>
+      <button id="lang-en" onclick="setLang('en')">EN</button>
+    </div>
+  </div>
+  <div class="clocks">
+    <span class="clock">🇪🇸 Madrid <b id="clk-mad">--:--</b></span>
+    <span class="clock">🇨🇴 Colombia <b id="clk-col">--:--</b></span>
+    <span class="clock" id="clk-diff"></span>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ================= INICIO ================= -->
+<section class="view on" id="v-home">
+  <div class="hero" id="hero">
+    <span class="credit" id="hero-credit"></span>
+    <div class="in">
+      <span class="kicker" data-t="heroKicker">Recién llegado</span>
+      <h1 data-t="heroTitle">Bienvenido a Madrid</h1>
+      <p data-t="heroText">Mapa, metro y buses, ayuda gratuita, papeles, empadronamiento y el español de España para que nadie te coja fuera de base.</p>
+    </div>
+  </div>
+
+  <div class="notice" id="fare-alert"></div>
+
+  <div class="grid g3 mt">
+    <button class="tile hot" onclick="go('places')"><span class="em">🏛️</span><b data-t="tPlaces">Lugares de interés</b><small data-t="tPlacesS">Qué conocer, gratis y de pago</small></button>
+    <button class="tile hot" onclick="go('papers')"><span class="em">📄</span><b data-t="tPapers">Papeles</b><small data-t="tPapersS">Padrón, NIE, TIE, arraigo</small></button>
+    <button class="tile" onclick="go('map')"><span class="em">🗺️</span><b data-t="tMap">Mapa</b><small data-t="tMapS">Ayuda, hospitales, barrios latinos</small></button>
+    <button class="tile" onclick="go('transit')"><span class="em">🚇</span><b data-t="tTransit">Metro y bus</b><small data-t="tTransitS">Rutas, líneas y tarifas 2026</small></button>
+    <button class="tile" onclick="go('phrases')"><span class="em">💬</span><b data-t="tPhrases">Español de España</b><small data-t="tPhrasesS">Conversaciones con audio</small></button>
+    <button class="tile" onclick="go('sos')"><span class="em">🆘</span><b data-t="tSos">Ayuda / SOS</b><small data-t="tSosS">Emergencias y asesoría</small></button>
+    <button class="tile" onclick="go('first')"><span class="em">✅</span><b data-t="tFirst">Primeros días</b><small data-t="tFirstS">Lista paso a paso</small></button>
+    <button class="tile" onclick="go('health')"><span class="em">🩺</span><b data-t="tHealth">Salud</b><small data-t="tHealthS">Centro de salud, farmacia, urgencias</small></button>
+    <button class="tile" onclick="go('work')"><span class="em">💼</span><b data-t="tWork">Trabajo y estudio</b><small data-t="tWorkS">Derechos, salario, calculadora</small></button>
+    <button class="tile" onclick="go('housing')"><span class="em">🏠</span><b data-t="tHousing">Vivienda</b><small data-t="tHousingS">Alquilar sin estafas</small></button>
+    <button class="tile" onclick="go('food')"><span class="em">🫓</span><b data-t="tFood">Comida latina</b><small data-t="tFoodS">Sabor de casa y supermercado</small></button>
+    <button class="tile" onclick="go('money')"><span class="em">💶</span><b data-t="tMoney">Dinero</b><small data-t="tMoneyS">Cambio en vivo y salario</small></button>
+    <button class="tile" onclick="go('pack')"><span class="em">🧥</span><b data-t="tPack">Clima y maleta</b><small data-t="tPackS">Ropa por mes y festivos</small></button>
+    <button class="tile" onclick="go('culture')"><span class="em">☕</span><b data-t="tCulture">Costumbres</b><small data-t="tCultureS">Cómo son los madrileños</small></button>
+    <button class="tile" onclick="go('safety')"><span class="em">🛡️</span><b data-t="tSafety">Seguridad</b><small data-t="tSafetyS">Carteristas, estafas y taxis</small></button>
+    <button class="tile" onclick="go('media')"><span class="em">📸</span><b data-t="tMedia">Fotos y videos</b><small data-t="tMediaS">Conoce la ciudad antes de ir</small></button>
+  </div>
+
+  <div class="grid g2 mt2">
+    <div class="card dark" id="wx-card">
+      <div class="small" style="opacity:.75" data-t="wxTitle">Clima en Madrid ahora</div>
+      <div class="wx mt" id="wx"><span class="spin"></span></div>
+      <div class="days" id="wx-days"></div>
+      <div class="small mt" style="opacity:.75" id="wx-tip"></div>
+    </div>
+    <div class="card" id="fx-card">
+      <div class="small muted" data-t="fxTitle">Euro hoy</div>
+      <div id="fx-main" class="mt"><span class="spin"></span></div>
+      <div class="small muted mt" id="fx-upd"></div>
+      <button class="btn sm ghost mt" onclick="go('money')" data-t="fxMore">Convertidor completo →</button>
+    </div>
+  </div>
+
+  <div class="card mt2" id="myaddr-card">
+    <h3 data-t="myAddrT">📍 Mi dirección en Madrid</h3>
+    <p class="small muted" data-t="myAddrS">Guárdala aquí. Si te pierdes, la app te lleva de vuelta o se la muestras a alguien. Solo queda en tu celular.</p>
+    <div class="row mt">
+      <input id="my-addr" placeholder="Ej: Calle de Bravo Murillo 120, 28020 Madrid">
+      <button class="btn red" onclick="saveAddr()" data-t="save">Guardar</button>
+    </div>
+    <div class="row mt" style="flex-wrap:wrap">
+      <button class="btn sm" onclick="routeHome()" data-t="takeHome">🏠 Llévame a casa</button>
+      <button class="btn sm ghost" onclick="openShow()" data-t="showSomeone">🙋 Mostrar a alguien</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MAPA ================= -->
+<section class="view" id="v-map">
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tMap">Mapa</h2><p data-t="mapSub">Toca un punto para ver detalles. Líneas y paradas desde OpenStreetMap.</p></div></div>
+  <div class="chips" id="map-chips"></div>
+  <div id="map"></div>
+  <div class="row mt" style="flex-wrap:wrap">
+    <button class="btn red sm" onclick="locateMe()" data-t="locate">📍 Dónde estoy</button>
+    <button class="btn sm" onclick="nearbyStops()" data-t="nearby">🚏 Paradas cerca de mí</button>
+    <button class="btn sm ghost" onclick="toggleTubeLines()" id="btn-lines" data-t="showLines">🚇 Dibujar líneas del metro</button>
+  </div>
+  <div id="map-info" class="mt"></div>
+</section>
+
+<!-- ================= TRANSPORTE ================= -->
+<section class="view" id="v-transit">
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tTransit">Metro y bus</h2><p data-t="transitSub">Metro de Madrid, buses EMT y Cercanías. Tarifas verificadas de 2026.</p></div></div>
+
+  <div class="card">
+    <h3 data-t="planT">🧭 ¿Cómo llego?</h3>
+    <label class="f" data-t="from">Desde</label>
+    <div class="row"><input id="j-from" placeholder="Estación, lugar o dirección (vacío = donde estoy)"><button class="btn sm ghost" onclick="useMyLoc('j-from')" title="GPS">📍</button></div>
+    <label class="f" data-t="to">Hasta</label>
+    <div class="row"><input id="j-to" placeholder="Ej: Puerta del Sol, Atocha, Calle Alcalá 100"><button class="btn sm ghost" onclick="fillHome('j-to')" title="Casa">🏠</button></div>
+    <button class="btn red block mt" onclick="planJourney()" data-t="search">Buscar ruta</button>
+    <div id="j-out" class="mt"></div>
+  </div>
+
+  <div class="card mt">
+    <h3 data-t="linesT">🚇 Líneas de metro</h3>
+    <p class="small muted" data-t="linesS">De punta a punta. Toca una línea para verla en el mapa.</p>
+    <div id="lines" class="status-list mt"></div>
+    <div class="row mt" style="flex-wrap:wrap;gap:6px">
+      <a class="btn sm ghost" href="https://www.metromadrid.es" target="_blank" rel="noopener" data-t="metroLive">🚦 Incidencias en vivo (Metro de Madrid)</a>
+      <a class="btn sm ghost" href="https://www.emtmadrid.es" target="_blank" rel="noopener" data-t="emtLive">🚌 Buses EMT en vivo</a>
+    </div>
+  </div>
+
+  <div class="sec-head"><div><h2 data-t="faresT">Tarifas 2026</h2><p data-t="faresS">Precios del Consorcio Regional de Transportes de Madrid.</p></div></div>
+  <div class="card">
+    <table class="fares" id="fares-table"></table>
+    <p class="small muted mt" data-t="faresNote">Fuente: CRTM y Comunidad de Madrid. Los descuentos de abonos (40%) y el Abono Joven a 10 € rigen del 1 de enero al 31 de diciembre de 2026. Confirma en crtm.es antes de comprar.</p>
+  </div>
+
+  <div class="sec-head"><div><h2 data-t="howT">Cómo funciona</h2></div></div>
+  <div id="how-acc"></div>
+</section>
+
+<!-- ================= FRASES ================= -->
+<section class="view" id="v-phrases">
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tPhrases">Español de España</h2><p data-t="phrSub">Hablamos el mismo idioma… casi. Conversaciones reales con audio en acento de Madrid y cómo lo dirías tú.</p></div></div>
+  <div class="sit-grid" id="sits"></div>
+  <div id="dlg-wrap" class="card mt" style="display:none">
+    <div class="row" style="justify-content:space-between"><h3 id="dlg-title"></h3><button class="btn sm" onclick="playAll()" data-t="playAll">▶ Todo</button></div>
+    <p class="small muted" id="dlg-ctx"></p>
+    <div class="dlg" id="dlg"></div>
+    <div id="dlg-tips" class="notice mt"></div>
+  </div>
+  <div class="sec-head"><div><h2 data-t="pocketT">Frases de bolsillo</h2><p data-t="pocketS">Las que más vas a usar en Madrid.</p></div></div>
+  <div class="pocket" id="pocket"></div>
+  <div class="sec-head"><div><h2 data-t="slangT">Diccionario España ↔ Latinoamérica</h2><p data-t="slangS">Palabras que vas a oír todos los días (y algunas que te pueden meter en un lío).</p></div></div>
+  <div class="card"><table class="fares" id="slang"></table></div>
+  <div class="card mt">
+    <h3 data-t="speedT">🐢 Velocidad de la voz</h3>
+    <input type="range" min="0.5" max="1.1" step="0.1" value="0.9" id="rate" style="padding:0;border:0">
+  </div>
+</section>
+
+<!-- ================= SOS ================= -->
+<section class="view" id="v-sos">
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tSos">Ayuda / SOS</h2><p data-t="sosSub">Toca para llamar. El 112 es gratis, funciona sin saldo y atiende las 24 horas.</p></div></div>
+  <div class="sos-grid">
+    <a class="call red" href="tel:112"><span class="n">112</span><small data-t="c112">Emergencias: ambulancia, bomberos, policía</small></a>
+    <a class="call" href="tel:091"><span class="n">091</span><small data-t="c091">Policía Nacional (denuncias, extranjería)</small></a>
+    <a class="call" href="tel:092"><span class="n">092</span><small data-t="c092">Policía Municipal de Madrid</small></a>
+    <a class="call" href="tel:016"><span class="n">016</span><small data-t="c016">Violencia contra la mujer. No deja rastro en la factura</small></a>
+    <a class="call" href="tel:024"><span class="n">024</span><small data-t="c024">Si estás pasando un momento muy duro. 24 h</small></a>
+    <a class="call" href="tel:010"><span class="n">010</span><small data-t="c010">Línea Madrid: trámites del Ayuntamiento</small></a>
+  </div>
+
+  <div class="sec-head"><div><h2 data-t="orgsT">Te asesoran gratis</h2><p data-t="orgsS">Consulado, ONG y servicios oficiales que atienden a migrantes.</p></div></div>
+  <div class="card" id="orgs"></div>
+
+  <div class="sec-head"><div><h2 data-t="sitsT">¿Qué hago si…?</h2></div></div>
+  <div id="sos-acc"></div>
+</section>
+
+<!-- ================= PAPELES ================= -->
+<section class="view" id="v-papers">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tPapers">Papeles</h2><p data-t="papersSub">Los trámites que abren todas las puertas en España, en orden.</p></div></div>
+  <div class="ladder" id="papers-steps"></div>
+  <div class="notice red mt" data-t="citaWarn">🚫 <b>Las citas de extranjería son GRATIS.</b> Si alguien te vende una cita, te pide dinero por "agilizar" o promete papeles rápidos, es estafa. Pide cita solo en la sede oficial o con una ONG.</div>
+  <div id="papers-acc" class="mt2"></div>
+</section>
+
+<!-- ================= SUBPÁGINAS ================= -->
+<section class="view" id="v-first">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tFirst">Primeros días</h2><p data-t="firstSub">Marca lo que ya hiciste. Se guarda en tu celular.</p></div></div>
+  <div class="progress"><i id="prog"></i></div>
+  <p class="small muted mt" id="prog-t"></p>
+  <div class="card mt" id="checklist"></div>
+  <div class="sec-head"><div><h2 data-t="visaT">Antes de viajar</h2></div></div>
+  <div id="visa-acc"></div>
+</section>
+
+<section class="view" id="v-money">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tMoney">Dinero</h2><p data-t="moneySub">Tasas en vivo. Úsalas como referencia: tu banco o la casa de cambio cobra un margen.</p></div></div>
+  <div class="card">
+    <label class="f" data-t="amount">Cantidad</label>
+    <div class="row"><input id="fx-amt" type="number" value="10" inputmode="decimal"><select id="fx-from" style="max-width:120px"></select></div>
+    <div class="mt" id="fx-results"></div>
+  </div>
+  <div class="grid g2 mt">
+    <div class="card red"><div class="small" style="opacity:.85" data-t="wageT">Salario mínimo 2026 (SMI)</div><div style="font-family:'Barlow Condensed';font-size:2.4rem;font-weight:800">1.221 €<small style="font-size:1rem">/<span data-t="month">mes</span></small></div><div class="small" data-t="wageS">En 14 pagas (17.094 € al año), jornada completa, desde el 1 de enero de 2026. Empleadas de hogar por horas: 9,55 €/h.</div><div class="small mt" id="wage-cop"></div></div>
+    <div class="card"><h3 data-t="tipsT">💡 Ahorra</h3><ul class="dots small mt" id="money-tips"></ul></div>
+  </div>
+</section>
+
+<section class="view" id="v-culture">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tCulture">Costumbres</h2><p data-t="cultSub">Lo que nadie te dice y te ahorra malos ratos.</p></div></div>
+  <div class="grid g2" id="culture"></div>
+</section>
+
+<section class="view" id="v-safety">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tSafety">Seguridad</h2><p data-t="safeSub">Madrid es una ciudad segura, pero estos son los riesgos reales.</p></div></div>
+  <div id="safety"></div>
+</section>
+
+<section class="view" id="v-media">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tMedia">Fotos y videos</h2><p data-t="mediaSub">Fotos reales de Wikimedia Commons. Toca una foto para verla en el mapa.</p></div></div>
+  <div class="gal" id="gallery"></div>
+  <div class="sec-head"><div><h2 data-t="vidT">Videos</h2><p data-t="vidS">Abren YouTube con los videos más recientes de cada tema.</p></div></div>
+  <div class="grid g2" id="vlinks"></div>
+</section>
+
+<!-- ================= LUGARES DE INTERÉS ================= -->
+<section class="view" id="v-places">
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tPlaces">Lugares de interés</h2><p data-t="placesSub">Qué conocer en Madrid: fotos reales, cómo llegar y cuáles son gratis.</p></div></div>
+  <div class="grid g3 keep" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat"><b id="st-total">0</b><small data-t="stTotal">lugares</small></div>
+    <div class="stat"><b id="st-free">0</b><small data-t="stFree">gratis</small></div>
+    <div class="stat"><b id="st-mine">0/0</b><small data-t="stMine">quiero ir / ya fui</small></div>
+  </div>
+  <div class="row mt"><input id="pl-q" placeholder="Buscar: museo, parque, mercado…"><button class="btn red" onclick="sortNear()" data-t="nearMe">📍 Cerca</button></div>
+  <div class="chips mt" id="pl-chips"></div>
+  <div class="places" id="places"></div>
+
+  <div class="sec-head"><div><h2 data-t="itinT">Itinerarios listos</h2><p data-t="itinS">Recorridos de un día. Toca para verlos dibujados en el mapa.</p></div></div>
+  <div class="grid g2" id="itins"></div>
+</section>
+
+<!-- ================= SALUD ================= -->
+<section class="view" id="v-health">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tHealth">Salud</h2><p data-t="healthSub">A dónde ir según lo que te pase. Sanidad pública de Madrid (SERMAS).</p></div></div>
+  <div class="ladder" id="ladder"></div>
+  <div id="health-acc" class="mt2"></div>
+</section>
+
+<!-- ================= TRABAJO ================= -->
+<section class="view" id="v-work">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tWork">Trabajo y estudio</h2><p data-t="workSub">Tus derechos, el salario mínimo y cómo no caer en trampas.</p></div></div>
+  <div class="card">
+    <h3 data-t="payT">🧮 Calculadora de sueldo</h3>
+    <div class="grid g2 keep" style="grid-template-columns:1fr 1fr">
+      <div><label class="f" data-t="payRate">Pago por hora (€)</label><input id="pay-rate" type="number" step="0.01" value="9.55" inputmode="decimal"></div>
+      <div><label class="f" data-t="payHours">Horas por semana</label><input id="pay-hours" type="number" value="40" inputmode="numeric"></div>
+    </div>
+    <div class="mt" id="pay-out"></div>
+  </div>
+  <div id="work-acc" class="mt"></div>
+</section>
+
+<!-- ================= VIVIENDA ================= -->
+<section class="view" id="v-housing">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tHousing">Vivienda</h2><p data-t="housingSub">Cómo encontrar habitación o piso sin que te estafen.</p></div></div>
+  <div class="card red"><h3 data-t="redFlagsT">🚩 Señales de estafa</h3><ul class="dots small mt" id="redflags"></ul></div>
+  <div id="housing-acc" class="mt"></div>
+  <div class="card mt"><h3 data-t="viewT">📝 Antes de firmar, revisa</h3><div id="viewlist" class="mt"></div></div>
+</section>
+
+<!-- ================= COMIDA LATINA ================= -->
+<section class="view" id="v-food">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tFood">Comida latina</h2><p data-t="foodSub">Dónde conseguir el sabor de casa y cómo se llaman las cosas aquí.</p></div></div>
+  <div class="grid g2" id="food-areas"></div>
+  <div class="sec-head"><div><h2 data-t="foodWordsT">En el supermercado</h2><p data-t="foodWordsS">Así se llaman las cosas en España.</p></div></div>
+  <div class="card"><table class="fares" id="food-words"></table></div>
+  <div class="notice mt" data-t="foodTip">💡 En los supermercados grandes (Mercadona, Carrefour, Alcampo) busca la sección <b>"internacional"</b>: casi siempre hay harina para arepas, fríjoles y salsas latinas.</div>
+</section>
+
+<!-- ================= CLIMA Y MALETA ================= -->
+<section class="view" id="v-pack">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="sec-head" style="margin-top:0"><div><h2 data-t="tPack">Clima, maleta y festivos</h2><p data-t="packSub">Qué ropa llevar según el mes y cuándo cierra todo.</p></div></div>
+  <div class="card">
+    <label class="f" data-t="monthQ">¿En qué mes viajas?</label>
+    <select id="pack-month"></select>
+    <div id="pack-out" class="mt"></div>
+  </div>
+  <div class="card mt">
+    <h3 data-t="climT">🌡️ Temperatura promedio en Madrid</h3>
+    <div class="clim" id="clim"></div>
+    <p class="small muted mt" data-t="climS">Máxima / mínima promedio en °C. Madrid es seco: inviernos fríos y veranos muy calurosos.</p>
+  </div>
+  <div class="card mt">
+    <h3 data-t="holT">📅 Próximos festivos en Madrid</h3>
+    <p class="small muted" data-t="holS">Bancos, oficinas y muchas tiendas cierran; el transporte funciona con horario de festivo.</p>
+    <div id="hols" class="mt"></div>
+  </div>
+</section>
+
+<!-- Ficha de lugar -->
+<div class="modal" id="pl-modal" onclick="if(event.target===this)closePlace()">
+  <div class="sheet" id="pl-sheet"></div>
+</div>
+
+</main>
+
+<footer class="foot">
+  <div><b>Desarrollada por Vibras Positivas HM — Derechos de Autor Reservados</b></div>
+  <div class="mt" data-t="footNote">Información de referencia, no es asesoría legal. Verifica trámites en administracion.gob.es y tarifas en crtm.es. Mapa, líneas y paradas © colaboradores de OpenStreetMap, © CARTO. Fotos: Wikimedia Commons.</div>
+  <div class="mt"><span data-t="updated">Actualizada</span>: <span id="upd"></span> (hora Colombia)</div>
+</footer>
+
+<nav class="tabs">
+  <button data-v="home" class="on" onclick="go('home')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span data-t="nHome">Inicio</span></button>
+  <button data-v="places" onclick="go('places')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg><span data-t="nPlaces">Lugares</span></button>
+  <button data-v="sos" class="sos" onclick="go('sos')"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg></span><em data-t="nSos">SOS</em></button>
+  <button data-v="transit" onclick="go('transit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4M16 21l-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/></svg><span data-t="nTransit">Transporte</span></button>
+  <button data-v="phrases" onclick="go('phrases')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span data-t="nPhrases">Frases</span></button>
+</nav>
+
+<div class="install" id="install"><p data-t="installT">Instala la app en tu celular para usarla sin internet.</p><button class="btn red sm" id="install-btn" data-t="install">Instalar</button><button class="btn sm" onclick="this.parentNode.classList.remove('on')">✕</button></div>
+<div class="toast" id="toast"></div>
+<div class="showcard" id="showcard" onclick="this.classList.remove('on')">
+  <div class="big">Perdone, soy nuevo en Madrid y me he perdido.<br>¿Me puede ayudar a llegar a esta dirección, por favor?</div>
+  <div class="addr" id="show-addr"></div>
+  <div class="mt2 muted" data-t="tapClose">(Toca para cerrar)</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* =========================================================
+   Madrid para Latinos — Vibras Positivas HM
+   ========================================================= */
+const OVERPASS = 'https://overpass-api.de/api/interpreter';
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('mxl_'+k); return v===null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k, v){ try{ localStorage.setItem('mxl_'+k, JSON.stringify(v)); }catch(e){} }
+};
+let LANG = store.get('lang','es');
+const L = (o)=> (o && typeof o==='object') ? (o[LANG] ?? o.es) : o;
+
+/* ---------- UI strings ---------- */
+const T = {
+  appName:{es:'Madrid para Latinos',en:'Madrid for Latinos'},
+  tagline:{es:'Tu guía para empezar en la ciudad',en:'Your survival guide to the city'},
+  heroKicker:{es:'Recién llegado',en:'Just arrived'},
+  heroTitle:{es:'Bienvenido a Madrid',en:'Welcome to Madrid'},
+  heroText:{es:'Mapa, metro y buses, ayuda gratuita, papeles, empadronamiento y el español de España para que nadie te coja fuera de base.',en:'Map, metro and buses, free help, paperwork, padrón registration and Spain\'s Spanish so nothing catches you off guard.'},
+
+  tPlaces:{es:'Lugares de interés',en:'Places to visit'}, tPlacesS:{es:'Qué conocer, gratis y de pago',en:'What to see, free and paid'},
+  placesSub:{es:'Qué conocer en Madrid: fotos reales, cómo llegar y cuáles son gratis.',en:'What to see in Madrid: real photos, directions and what\'s free.'},
+  stTotal:{es:'lugares',en:'places'}, stFree:{es:'gratis',en:'free'}, stMine:{es:'quiero ir / ya fui',en:'want / visited'},
+  nearMe:{es:'📍 Cerca',en:'📍 Near me'}, itinT:{es:'Itinerarios listos',en:'Ready-made itineraries'}, itinS:{es:'Recorridos de un día. Toca para verlos dibujados en el mapa.',en:'One-day routes. Tap to see them on the map.'},
+  nPlaces:{es:'Lugares',en:'Places'},
+  tPapers:{es:'Papeles',en:'Paperwork'}, tPapersS:{es:'Padrón, NIE, TIE, arraigo',en:'Padrón, NIE, TIE, residency'},
+  papersSub:{es:'Los trámites que abren todas las puertas en España, en orden.',en:'The procedures that open every door in Spain, in order.'},
+  citaWarn:{es:'🚫 <b>Las citas de extranjería son GRATIS.</b> Si alguien te vende una cita, te pide dinero por "agilizar" o promete papeles rápidos, es estafa. Pide cita solo en la sede oficial o con una ONG.',en:'🚫 <b>Immigration appointments are FREE.</b> Anyone selling an appointment or promising fast papers is a scammer. Book only on the official site or through an NGO.'},
+  tHealth:{es:'Salud',en:'Health'}, tHealthS:{es:'Centro de salud, farmacia, urgencias',en:'GP, pharmacy, A&E'}, healthSub:{es:'A dónde ir según lo que te pase. Sanidad pública de Madrid (SERMAS).',en:'Where to go depending on what happens. Madrid public health service (SERMAS).'},
+  tWork:{es:'Trabajo y estudio',en:'Work & study'}, tWorkS:{es:'Derechos, salario, calculadora',en:'Rights, wages, calculator'}, workSub:{es:'Tus derechos, el salario mínimo y cómo no caer en trampas.',en:'Your rights, minimum wage and avoiding traps.'},
+  payT:{es:'🧮 Calculadora de sueldo',en:'🧮 Pay calculator'}, payRate:{es:'Pago por hora (€)',en:'Hourly pay (€)'}, payHours:{es:'Horas por semana',en:'Hours per week'},
+  tHousing:{es:'Vivienda',en:'Housing'}, tHousingS:{es:'Alquilar sin estafas',en:'Renting without scams'}, housingSub:{es:'Cómo encontrar habitación o piso sin que te estafen.',en:'How to find a room or flat safely.'},
+  redFlagsT:{es:'🚩 Señales de estafa',en:'🚩 Scam red flags'}, viewT:{es:'📝 Antes de firmar, revisa',en:'📝 Check before signing'},
+  tFood:{es:'Comida latina',en:'Latin food'}, tFoodS:{es:'Sabor de casa y supermercado',en:'Taste of home & groceries'}, foodSub:{es:'Dónde conseguir el sabor de casa y cómo se llaman las cosas aquí.',en:'Where to find home flavours and what things are called here.'},
+  foodWordsT:{es:'En el supermercado',en:'At the supermarket'}, foodWordsS:{es:'Así se llaman las cosas en España.',en:'Spanish (Spain) names for everyday items.'},
+  foodTip:{es:'💡 En los supermercados grandes (Mercadona, Carrefour, Alcampo) busca la sección <b>"internacional"</b>: casi siempre hay harina para arepas, fríjoles y salsas latinas.',en:'💡 Big supermarkets (Mercadona, Carrefour, Alcampo) have an <b>"international"</b> section with arepa flour, beans and Latin sauces.'},
+  tPack:{es:'Clima y maleta',en:'Weather & packing'}, tPackS:{es:'Ropa por mes y festivos',en:'Clothes by month & holidays'}, packSub:{es:'Qué ropa llevar según el mes y cuándo cierra todo.',en:'What to pack by month and when things close.'},
+  monthQ:{es:'¿En qué mes viajas?',en:'Which month are you travelling?'}, climT:{es:'🌡️ Temperatura promedio en Madrid',en:'🌡️ Average temperature in Madrid'},
+  climS:{es:'Máxima / mínima promedio en °C. Madrid es seco: inviernos fríos y veranos muy calurosos.',en:'Average high/low in °C. Madrid is dry: cold winters and very hot summers.'},
+  holT:{es:'📅 Próximos festivos en Madrid',en:'📅 Upcoming public holidays in Madrid'}, holS:{es:'Bancos, oficinas y muchas tiendas cierran; el transporte funciona con horario de festivo.',en:'Banks, offices and many shops close; transport runs a holiday timetable.'},
+  tMap:{es:'Mapa',en:'Map'}, tMapS:{es:'Ayuda, hospitales, barrios latinos',en:'Help, hospitals, Latin areas'},
+  tTransit:{es:'Metro y bus',en:'Metro & bus'}, tTransitS:{es:'Rutas, líneas y tarifas 2026',en:'Routes, lines and 2026 fares'},
+  tPhrases:{es:'Español de España',en:'Spain\'s Spanish'}, tPhrasesS:{es:'Conversaciones con audio',en:'Dialogues with audio'},
+  tSos:{es:'Ayuda / SOS',en:'Help / SOS'}, tSosS:{es:'Emergencias y asesoría',en:'Emergencies & advice'},
+  tFirst:{es:'Primeros días',en:'First days'}, tFirstS:{es:'Lista paso a paso',en:'Step-by-step checklist'},
+  tMoney:{es:'Dinero',en:'Money'}, tMoneyS:{es:'Cambio en vivo y salario',en:'Live rates and wages'},
+  tCulture:{es:'Costumbres',en:'Customs'}, tCultureS:{es:'Cómo son los madrileños',en:'How people in Madrid behave'},
+  tSafety:{es:'Seguridad',en:'Safety'}, tSafetyS:{es:'Carteristas, estafas y taxis',en:'Pickpockets, scams and taxis'},
+  tMedia:{es:'Fotos y videos',en:'Photos & videos'}, tMediaS:{es:'Conoce la ciudad antes de ir',en:'See the city before you go'},
+  wxTitle:{es:'Clima en Madrid ahora',en:'Madrid weather now'},
+  fxTitle:{es:'Euro hoy',en:'Euro today'}, fxMore:{es:'Convertidor completo →',en:'Full converter →'},
+  myAddrT:{es:'📍 Mi dirección en Madrid',en:'📍 My address in Madrid'},
+  myAddrS:{es:'Guárdala aquí. Si te pierdes, la app te lleva de vuelta o se la muestras a alguien. Solo queda en tu celular.',en:'Save it here. If you get lost, the app routes you back or you can show it to someone. It stays on your phone only.'},
+  save:{es:'Guardar',en:'Save'}, takeHome:{es:'🏠 Llévame a casa',en:'🏠 Take me home'}, showSomeone:{es:'🙋 Mostrar a alguien',en:'🙋 Show someone'},
+  mapSub:{es:'Toca un punto para ver detalles. Líneas y paradas desde OpenStreetMap.',en:'Tap a pin for details. Lines and stops from OpenStreetMap.'},
+  locate:{es:'📍 Dónde estoy',en:'📍 Where am I'}, nearby:{es:'🚏 Paradas cerca de mí',en:'🚏 Stops near me'},
+  showLines:{es:'🚇 Dibujar líneas del metro',en:'🚇 Draw metro lines'},
+  transitSub:{es:'Metro de Madrid, buses EMT y Cercanías. Tarifas verificadas de 2026.',en:'Madrid Metro, EMT buses and Cercanías trains. Verified 2026 fares.'},
+  planT:{es:'🧭 ¿Cómo llego?',en:'🧭 How do I get there?'}, from:{es:'Desde',en:'From'}, to:{es:'Hasta',en:'To'},
+  search:{es:'Buscar ruta',en:'Find route'},
+  linesT:{es:'🚇 Líneas de metro',en:'🚇 Metro lines'}, linesS:{es:'De punta a punta. Toca una línea para verla en el mapa.',en:'End to end. Tap a line to see it on the map.'},
+  metroLive:{es:'🚦 Incidencias en vivo (Metro de Madrid)',en:'🚦 Live service status (Metro de Madrid)'}, emtLive:{es:'🚌 Buses EMT en vivo',en:'🚌 Live EMT buses'},
+  faresT:{es:'Tarifas 2026',en:'2026 fares'}, faresS:{es:'Precios del Consorcio Regional de Transportes de Madrid.',en:'Prices from the Madrid Regional Transport Consortium.'},
+  faresNote:{es:'Fuente: CRTM y Comunidad de Madrid. Los descuentos de abonos (40%) y el Abono Joven a 10 € rigen del 1 de enero al 31 de diciembre de 2026. Confirma en crtm.es antes de comprar.',en:'Source: CRTM / Comunidad de Madrid. The 40% travel-pass discount and the €10 Youth Pass apply from 1 January to 31 December 2026. Check crtm.es before buying.'},
+  howT:{es:'Cómo funciona',en:'How it works'},
+  phrSub:{es:'Hablamos el mismo idioma… casi. Conversaciones reales con audio en acento de Madrid y cómo lo dirías tú.',en:'Same language… almost. Real dialogues with Madrid-accent audio and English translation.'},
+  playAll:{es:'▶ Todo',en:'▶ All'}, pocketT:{es:'Frases de bolsillo',en:'Pocket phrases'}, pocketS:{es:'Las que más vas a usar en Madrid.',en:'The ones you will use most in Madrid.'},
+  slangT:{es:'Diccionario España ↔ Latinoamérica',en:'Spain ↔ Latin America dictionary'}, slangS:{es:'Palabras que vas a oír todos los días (y algunas que te pueden meter en un lío).',en:'Words you will hear every day.'},
+  speedT:{es:'🐢 Velocidad de la voz',en:'🐢 Voice speed'},
+  sosSub:{es:'Toca para llamar. El 112 es gratis, funciona sin saldo y atiende las 24 horas.',en:'Tap to call. 112 is free, works without credit and answers 24/7.'},
+  c112:{es:'Emergencias: ambulancia, bomberos, policía',en:'Emergency: ambulance, fire, police'},
+  c091:{es:'Policía Nacional (denuncias, extranjería)',en:'National Police (reports, immigration)'},
+  c092:{es:'Policía Municipal de Madrid',en:'Madrid City Police'},
+  c016:{es:'Violencia contra la mujer. No deja rastro en la factura',en:'Violence against women. Leaves no trace on your bill'},
+  c024:{es:'Si estás pasando un momento muy duro. 24 h',en:'If you are going through a very hard time. 24/7'},
+  c010:{es:'Línea Madrid: trámites del Ayuntamiento',en:'Línea Madrid: city council services'},
+  orgsT:{es:'Te asesoran gratis',en:'Free advice'}, orgsS:{es:'Consulado, ONG y servicios oficiales que atienden a migrantes.',en:'Consulate, NGOs and official services for migrants.'},
+  sitsT:{es:'¿Qué hago si…?',en:'What do I do if…?'},
+  back:{es:'Volver',en:'Back'}, firstSub:{es:'Marca lo que ya hiciste. Se guarda en tu celular.',en:'Tick what you have done. Saved on your phone.'},
+  visaT:{es:'Antes de viajar',en:'Before you travel'},
+  moneySub:{es:'Tasas en vivo. Úsalas como referencia: tu banco o la casa de cambio cobra un margen.',en:'Live rates, for reference: your bank or exchange adds a margin.'},
+  amount:{es:'Cantidad',en:'Amount'}, wageT:{es:'Salario mínimo 2026 (SMI)',en:'2026 minimum wage (SMI)'}, month:{es:'mes',en:'month'},
+  wageS:{es:'En 14 pagas (17.094 € al año), jornada completa, desde el 1 de enero de 2026. Empleadas de hogar por horas: 9,55 €/h.',en:'Paid in 14 instalments (€17,094 a year), full-time, from 1 January 2026. Hourly domestic workers: €9.55/h.'},
+  tipsT:{es:'💡 Ahorra',en:'💡 Save money'},
+  cultSub:{es:'Lo que nadie te dice y te ahorra malos ratos.',en:'What nobody tells you.'},
+  safeSub:{es:'Madrid es una ciudad segura, pero estos son los riesgos reales.',en:'Madrid is safe, but these are the real risks.'},
+  mediaSub:{es:'Fotos reales de Wikimedia Commons. Toca una foto para verla en el mapa.',en:'Real photos from Wikimedia Commons. Tap one to see it on the map.'},
+  vidT:{es:'Videos',en:'Videos'}, vidS:{es:'Abren YouTube con los videos más recientes de cada tema.',en:'Open YouTube with the latest videos on each topic.'},
+  footNote:{es:'Información de referencia, no es asesoría legal. Verifica trámites en administracion.gob.es y tarifas en crtm.es. Mapa, líneas y paradas © colaboradores de OpenStreetMap, © CARTO. Fotos: Wikimedia Commons.',en:'Reference information, not legal advice. Check procedures on administracion.gob.es and fares on crtm.es. Map, lines and stops © OpenStreetMap contributors, © CARTO. Photos: Wikimedia Commons.'},
+  updated:{es:'Actualizada',en:'Updated'},
+  nHome:{es:'Inicio',en:'Home'}, nSos:{es:'SOS',en:'SOS'}, nTransit:{es:'Transporte',en:'Transport'}, nPhrases:{es:'Frases',en:'Phrases'},
+  installT:{es:'Instala la app en tu celular para usarla sin internet.',en:'Install the app on your phone to use it offline.'},
+  install:{es:'Instalar',en:'Install'}, tapClose:{es:'(Toca para cerrar)',en:'(Tap to close)'}
+};
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-t]').forEach(el=>{ const k=el.dataset.t; if(T[k]) el.innerHTML = L(T[k]); });
+  document.getElementById('lang-es').classList.toggle('on',LANG==='es');
+  document.getElementById('lang-en').classList.toggle('on',LANG==='en');
+  const ph = {
+    'my-addr':{es:'Ej: Calle de Bravo Murillo 120, 28020 Madrid',en:'e.g. Calle de Bravo Murillo 120, 28020 Madrid'},
+    'j-from':{es:'Estación, lugar o dirección (vacío = donde estoy)',en:'Station, place or address (empty = where I am)'},
+    'j-to':{es:'Ej: Puerta del Sol, Atocha, Calle Alcalá 100',en:'e.g. Puerta del Sol, Atocha, Calle Alcalá 100'},
+    'pl-q':{es:'Buscar: museo, parque, mercado…',en:'Search: museum, park, market…'}
+  };
+  for(const id in ph){ const el=document.getElementById(id); if(el) el.placeholder=L(ph[id]); }
+}
+function setLang(l){ LANG=l; store.set('lang',l); applyLang(); renderAll(); }
+
+/* ---------- Helpers ---------- */
+const $ = (s)=>document.querySelector(s);
+const jsq = (s)=>String(s??'').replace(/['"\\<>&]/g,'');
+const esc = (s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2600); }
+async function getJSON(url){
+  const r = await fetch(url);
+  const j = await r.json().catch(()=>null);
+  return {ok:r.ok, status:r.status, data:j};
+}
+function tz(date, zone, opts){ return new Intl.DateTimeFormat(LANG==='es'?'es-CO':'en-GB',{timeZone:zone,...opts}).format(date); }
+
+/* ---------- Clocks (hora real) ---------- */
+function offsetMin(zone, d=new Date()){
+  const p = new Intl.DateTimeFormat('en-US',{timeZone:zone,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).formatToParts(d);
+  const g = k=>+p.find(x=>x.type===k).value;
+  return (Date.UTC(g('year'),g('month')-1,g('day'),g('hour'),g('minute')) - Date.UTC(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes()))/60000;
+}
+function tick(){
+  const d=new Date();
+  $('#clk-mad').textContent = tz(d,'Europe/Madrid',{hour:'2-digit',minute:'2-digit'});
+  $('#clk-col').textContent = tz(d,'America/Bogota',{hour:'2-digit',minute:'2-digit'});
+  const h = (offsetMin('Europe/Madrid',d)-offsetMin('America/Bogota',d))/60;
+  $('#clk-diff').textContent = LANG==='es' ? `Madrid va ${h} h adelante` : `Madrid is ${h} h ahead`;
+}
+
+/* ---------- Navigation ---------- */
+function go(v){
+  document.querySelectorAll('section.view').forEach(s=>s.classList.remove('on'));
+  $('#v-'+v).classList.add('on');
+  document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  window.scrollTo({top:0,behavior:'instant'});
+  if(v==='map') initMap();
+  if(v==='media') loadGallery();
+  history.replaceState(null,'','#'+v);
+}
+
+/* ---------- Fares (verificadas oct. 2026: CRTM / Comunidad de Madrid) ---------- */
+function renderFares(){
+  $('#fare-alert').innerHTML = L({es:'💳 Desde el 1 de junio de 2026 puedes pagar el metro <b>con tu tarjeta bancaria o el celular</b> directo en el torno, en todas las estaciones. Y todo 2026 los abonos tienen <b>40% de descuento</b> (zona A: 32,70 €/mes).',en:'💳 Since 1 June 2026 you can pay for the metro <b>with your bank card or phone</b> right at the gate, in every station. All through 2026 travel passes are <b>40% off</b> (zone A: €32.70/month).'});
+  const rows = [
+    [{es:'Metro — billete sencillo (zona A, según distancia)',en:'Metro single (zone A, by distance)'}, '1,50–2,00 €'],
+    [{es:'Metro — sencillo pagando con tarjeta o celular en el torno',en:'Metro single, paying by card/phone at the gate'}, '1,50 €*'],
+    [{es:'Bus EMT — billete sencillo',en:'EMT bus single'}, '1,50 €'],
+    [{es:'Billete 10 viajes (Metro zona A, EMT y ML1)',en:'10-trip ticket (Metro zone A, EMT, ML1)'}, '7,30 €'],
+    [{es:'Suplemento aeropuerto (Metro, estaciones de Barajas)',en:'Airport supplement (Metro, Barajas stations)'}, '3,00 €'],
+    [{es:'Bus Exprés Aeropuerto (24 horas)',en:'Airport Express bus (24h)'}, '5,00 €'],
+    [{es:'Abono mensual zona A (26–64 años)',en:'Monthly pass zone A (ages 26–64)'}, '32,70 €'],
+    [{es:'Abono mensual zona B1',en:'Monthly pass zone B1'}, '38,20 €'],
+    [{es:'Abono Joven (15–25 años, toda la región)',en:'Youth Pass (ages 15–25, whole region)'}, '10,00 €'],
+    [{es:'Menores de 7 años',en:'Under 7'}, L({es:'Gratis',en:'Free'})],
+    [{es:'Abono Turístico zona A — 1 / 3 / 7 días',en:'Tourist Pass zone A — 1 / 3 / 7 days'}, '10,30 / 23,10 / 43,20 €']
+  ];
+  $('#fares-table').innerHTML = `<tr><th>${L({es:'Título',en:'Ticket'})}</th><th style="text-align:right">${L({es:'Precio',en:'Price'})}</th></tr>` + rows.map(r=>`<tr><td>${L(r[0])}</td><td>${r[1]}</td></tr>`).join('') +
+    `<tr><td colspan="2" class="small muted" style="font-weight:400;text-align:left">* ${L({es:'La Comunidad lo anunció como precio de lanzamiento; la tarifa normal del sencillo va de 1,50 a 2,00 € según las estaciones.',en:'Announced as a launch price; the normal single fare is €1.50–2.00 depending on distance.'})}</td></tr>`;
+}
+
+/* ---------- How it works ---------- */
+const HOW = [
+  {t:{es:'💳 Paga con tarjeta o celular (sin billete)',en:'💳 Pay with card or phone (no ticket)'},
+   b:{es:'<p>Desde el 1 de junio de 2026 las 303 estaciones del Metro aceptan pago <b>contactless</b>: acercas tu tarjeta débito/crédito, el celular o el reloj al torno y listo. Sirve para el <b>billete sencillo</b>; los abonos y el billete de 10 viajes siguen yendo en la tarjeta de transporte.</p><ul class="dots mt"><li>En estaciones con tornos antiguos, al menos dos tornos por acceso aceptan tarjeta.</li><li>Las tarjetas colombianas pueden cobrar comisión por compra en el exterior: una tarjeta tipo Wise o Revolut suele salir más barata.</li><li>En el bus EMT también puedes pagar con tarjeta al subir.</li></ul>',
+      en:'<p>Since 1 June 2026 all 303 Metro stations accept <b>contactless</b>: tap your card, phone or watch at the gate. It works for <b>single tickets</b>; passes and 10-trip tickets still go on the transport card.</p><ul class="dots mt"><li>At older stations, at least two gates per entrance take cards.</li><li>Foreign cards may charge a fee; Wise or Revolut are usually cheaper.</li><li>EMT buses also take card payment on board.</li></ul>'}},
+  {t:{es:'🎫 Tarjeta Multi: 10 viajes',en:'🎫 Multi card: 10 trips'},
+   b:{es:'<p>Si vas a moverte varios días, compra en las máquinas del metro la <b>Tarjeta Transporte Público Multi</b> (no es personal, la puede usar cualquiera) y cárgale el <b>billete de 10 viajes por 7,30 €</b>: sale a 0,73 € el viaje y sirve en metro zona A, buses EMT y Metro Ligero 1. La tarjeta tiene un costo aparte la primera vez.</p>',
+      en:'<p>Buy the non-personal <b>Multi card</b> at metro machines and load the <b>10-trip ticket for €7.30</b> (€0.73 per trip) — valid on Metro zone A, EMT buses and Light Metro 1. The card itself has a one-off cost.</p>'}},
+  {t:{es:'🪪 Abono mensual con descuento',en:'🪪 Discounted monthly pass'},
+   b:{es:'<p>Si vas a vivir aquí, el abono es lo más barato: <b>32,70 € al mes en zona A</b> con viajes ilimitados en todo 2026 (tiene 40% de descuento). Si tienes de 15 a 25 años, el <b>Abono Joven cuesta 10 €</b> para toda la Comunidad. Necesitas la <b>tarjeta personal</b>, que se pide en tarjetatransportepublico.es o en oficinas del Consorcio con tu documento.</p>',
+      en:'<p>Living here? The pass is cheapest: <b>€32.70/month in zone A</b>, unlimited trips through 2026 (40% off). Ages 15–25 pay <b>€10</b> for the whole region. You need the <b>personal card</b>, requested at tarjetatransportepublico.es or Consortium offices with your ID.</p>'}},
+  {t:{es:'✈️ De Barajas a la ciudad',en:'✈️ From Barajas to the city'},
+   b:{es:'<ul class="dots"><li><b>Metro línea 8 (rosada):</b> de la T4 o la T1-2-3 a Nuevos Ministerios en unos 20 min. Pagas billete + suplemento de 3 €.</li><li><b>Bus Exprés Aeropuerto:</b> 5 €, funciona las 24 horas; llega a Atocha de día y a Cibeles de noche.</li><li><b>Cercanías C1:</b> tren desde la T4 hasta Chamartín, Atocha y Príncipe Pío.</li><li><b>Taxi:</b> blanco con franja roja, con tarifa fija hasta el centro (dentro de la M-30). El precio va pegado en la ventana: compruébalo.</li><li>No aceptes "taxis" ofrecidos por personas en la salida.</li></ul>',
+      en:'<ul class="dots"><li><b>Metro line 8 (pink):</b> T4 or T1-2-3 to Nuevos Ministerios in ~20 min. Ticket + €3 supplement.</li><li><b>Airport Express bus:</b> €5, 24h, to Atocha (day) / Cibeles (night).</li><li><b>Cercanías C1:</b> train from T4 to Chamartín, Atocha and Príncipe Pío.</li><li><b>Taxi:</b> white with a red stripe, fixed fare to the centre (inside the M-30) shown on the window.</li></ul>'}},
+  {t:{es:'🌙 Horarios y buses búho',en:'🌙 Hours and night "owl" buses'},
+   b:{es:'<p>El metro funciona aproximadamente de <b>6:00 a 1:30</b>. De madrugada circulan los buses nocturnos <b>"búhos"</b> (líneas N), casi todos salen de la plaza de Cibeles.</p>',
+      en:'<p>The metro runs roughly <b>06:00–01:30</b>. Overnight, the <b>"búho"</b> night buses (N lines) run, most leaving from Plaza de Cibeles.</p>'}},
+  {t:{es:'🧭 Para no perderte',en:'🧭 Finding your way'},
+   b:{es:'<ul class="dots"><li>Las líneas se reconocen por <b>número y color</b>; la dirección es la última estación ("dirección Valdecarros").</li><li>"Transbordo" = cambio de línea, no pagas otra vez.</li><li>En las escaleras mecánicas ponte a la derecha.</li><li>Zona A = todo el municipio de Madrid. Algunas estaciones lejanas (MetroSur, aeropuerto) tienen otra tarifa.</li></ul>',
+      en:'<ul class="dots"><li>Lines have a <b>number and colour</b>; direction is the last station.</li><li>"Transbordo" = change lines, no extra charge.</li><li>Stand on the right on escalators.</li><li>Zone A = the whole city of Madrid.</li></ul>'}},
+  {t:{es:'📱 Apps recomendadas',en:'📱 Recommended apps'},
+   b:{es:'<ul class="dots"><li><b>Metro de Madrid</b> (oficial): plano, avisos e incidencias.</li><li><b>EMT Madrid</b> (oficial): cuánto falta para tu bus en cada parada.</li><li><b>Google Maps</b>, Citymapper o Moovit: rutas puerta a puerta.</li><li><b>Tarjeta Transporte Virtual</b>: llevar el abono en el celular.</li></ul>',
+      en:'<ul class="dots"><li><b>Metro de Madrid</b> (official): map and alerts.</li><li><b>EMT Madrid</b> (official): live bus arrivals.</li><li><b>Google Maps</b>, Citymapper or Moovit: door-to-door routes.</li><li><b>Virtual Transport Card</b>: your pass on your phone.</li></ul>'}}
+];
+function renderAcc(el, arr){ el.innerHTML = arr.map((x,i)=>`<details class="acc"${i===0?' open':''}><summary>${L(x.t)}</summary><div class="body">${L(x.b)}</div></details>`).join(''); }
+
+/* ---------- Metro lines ---------- */
+const MLINES = [
+  ['1','#2DBEF0','Pinar de Chamartín','Valdecarros'],
+  ['2','#ED1C24','Las Rosas','Cuatro Caminos'],
+  ['3','#FFD000','Villaverde Alto','Moncloa'],
+  ['4','#B65518','Argüelles','Pinar de Chamartín'],
+  ['5','#8FD400','Alameda de Osuna','Casa de Campo'],
+  ['6','#98989B',{es:'Circular',en:'Circle line'},''],
+  ['7','#EE7518','Hospital del Henares','Pitis'],
+  ['8','#EC82B1','Nuevos Ministerios',{es:'Aeropuerto T4',en:'Airport T4'}],
+  ['9','#A60084','Paco de Lucía','Arganda del Rey'],
+  ['10','#005AA9','Hospital Infanta Sofía','Puerta del Sur'],
+  ['11','#009B3A','Plaza Elíptica','La Fortuna'],
+  ['12','#A49800',{es:'MetroSur (circular)',en:'MetroSur (circle)'},''],
+  ['R','#0055A4','Ópera','Príncipe Pío']
+];
+const LINE_COLORS = Object.fromEntries(MLINES.map(l=>[l[0],l[1]]));
+function renderLines(){
+  $('#lines').innerHTML = MLINES.map(l=>`<button class="st" style="border:0;text-align:left;width:100%" onclick="showLine('${l[0]}')"><span class="bar" style="background:${l[1]}"></span><span style="flex:none;width:30px;height:30px;border-radius:50%;background:${l[1]};color:${['3','6','5','12','8'].includes(l[0])?'#111':'#fff'};display:grid;place-items:center;font-weight:800">${l[0]}</span><span class="nm">${esc(L(l[2]))}${l[3]?' ↔ '+esc(L(l[3])):''}</span><span class="pill">🗺️</span></button>`).join('');
+}
+function showLine(ref){ go('map'); setTimeout(async()=>{ if(!L_) return; await toggleTubeLines(true); const lay=lineLayers[ref]; if(lay){ map.fitBounds(lay.getBounds(),{padding:[30,30]}); lay.eachLayer(p=>(p instanceof L_.Polyline)&&p.setStyle({weight:8})); setTimeout(()=>lay.eachLayer(p=>(p instanceof L_.Polyline)&&p.setStyle({weight:4})),2500);} },300); }
+
+/* ---------- Journey planner (abre Google Maps / Apple Maps con transporte público) ---------- */
+let destLabel='';
+function mapsLinks(from,to){
+  const g = 'https://www.google.com/maps/dir/?api=1&travelmode=transit'+(from?'&origin='+encodeURIComponent(from):'')+'&destination='+encodeURIComponent(to);
+  const a = 'https://maps.apple.com/?dirflg=r'+(from?'&saddr='+encodeURIComponent(from):'')+'&daddr='+encodeURIComponent(to);
+  const w = 'https://www.google.com/maps/dir/?api=1&travelmode=walking'+(from?'&origin='+encodeURIComponent(from):'')+'&destination='+encodeURIComponent(to);
+  return {g,a,w};
+}
+function addMadrid(q){ q=q.trim(); return (/^-?\d+\.\d+,\s*-?\d+\.\d+$/.test(q) || /madrid/i.test(q)) ? q : q+', Madrid'; }
+function planJourney(){
+  const out=$('#j-out');
+  const fromV=$('#j-from').value.trim(), toV=$('#j-to').value.trim();
+  if(!toV){ toast(L({es:'Escribe a dónde vas',en:'Enter your destination'})); return; }
+  const from = fromV?addMadrid(fromV):'', to = addMadrid(toV);
+  const l = mapsLinks(from,to);
+  out.innerHTML = `<div class="card" style="box-shadow:none;background:var(--bg-2)"><p class="small">${L({es:'Ruta',en:'Route'})}: <b>${esc(fromV||L({es:'donde estoy',en:'my location'}))}</b> → <b>${esc(destLabel||toV)}</b></p>
+   <div class="grid g2 keep mt" style="grid-template-columns:1fr 1fr"><a class="btn red" href="${l.g}" target="_blank" rel="noopener">🚇 Google Maps</a><a class="btn" href="${l.a}" target="_blank" rel="noopener">🍎 Apple Maps</a></div>
+   <a class="btn ghost block mt" href="${l.w}" target="_blank" rel="noopener">🚶 ${L({es:'Ir caminando',en:'Walk there'})}</a>
+   <p class="small muted mt">${L({es:'Te muestra horarios en vivo, transbordos y el andén. Si dejas "Desde" vacío, sale de donde estás.',en:'Shows live times, transfers and platforms. Leave "From" empty to start from your location.'})}</p></div>`;
+  destLabel='';
+}
+function getPos(){ return new Promise((res,rej)=>{ if(!navigator.geolocation) return rej(); navigator.geolocation.getCurrentPosition(p=>res(p.coords),rej,{enableHighAccuracy:true,timeout:12000}); }); }
+async function useMyLoc(id){ try{ const c=await getPos(); $('#'+id).value=`${c.latitude.toFixed(5)},${c.longitude.toFixed(5)}`; toast('📍 OK'); }catch(e){ toast(L({es:'Activa la ubicación del celular',en:'Turn on location'})); } }
+function fillHome(id){ const a=store.get('addr',''); if(!a){ toast(L({es:'Primero guarda tu dirección en Inicio',en:'Save your address on Home first'})); return;} $('#'+id).value=a; }
+
+/* ---------- Places on the map ---------- */
+const CATS = {
+  help:{ic:'🤝',c:'#EB0A1E',n:{es:'Ayuda y trámites',en:'Help & offices'}},
+  health:{ic:'🏥',c:'#0067B1',n:{es:'Urgencias',en:'A&E'}},
+  latino:{ic:'🫓',c:'#F2A900',n:{es:'Barrios latinos',en:'Latin areas'}},
+  sights:{ic:'🏛️',c:'#0B0B0C',n:{es:'Lugares de interés',en:'Places to visit'}},
+  air:{ic:'✈️',c:'#6E6E76',n:{es:'Aeropuerto y estaciones',en:'Airport & stations'}}
+};
+const PLACES = [
+  {cat:'help',n:'Consulado de Colombia en Madrid',lat:40.4183,lng:-3.6903,a:'Calle de Alfonso XI, 6, 28014 Madrid',tel:'+34917452590',web:'https://madrid.consulado.gov.co',d:{es:'Pasaporte, registro civil, poderes, Registro Consular y ayuda a colombianos en emergencia. Lunes a viernes con cita previa.',en:'Passports, civil registry, powers of attorney and emergency help for Colombians. Mon–Fri by appointment.'}},
+  {cat:'help',n:'Embajada de Colombia',lat:40.4381,lng:-3.6923,a:'Paseo del General Martínez Campos, 48, 28010 Madrid',d:{es:'Representación diplomática. Los trámites de ciudadanos se hacen en el consulado.',en:'Diplomatic mission. Citizen services are at the consulate.'}},
+  {cat:'help',n:'Oficina de Extranjería de Madrid',lat:40.4368,lng:-3.6985,a:'Calle de García de Paredes, 65, 28010 Madrid',web:'https://sede.administracionespublicas.gob.es',d:{es:'Autorizaciones de residencia y trabajo (arraigo, renovaciones). Solo con cita previa, que es gratis.',en:'Residence and work permits. By free appointment only.'}},
+  {cat:'help',n:'Comisaría de Extranjería — Aluche',lat:40.3842,lng:-3.7605,a:'Avenida de los Poblados, s/n, 28044 Madrid',d:{es:'Policía Nacional: toma de huellas y recogida de la TIE, NIE y certificados. Con cita previa.',en:'National Police: fingerprints and collection of the TIE residence card, NIE. By appointment.'}},
+  {cat:'health',n:'Hospital Universitario La Paz (urgencias)',lat:40.4810,lng:-3.6870,a:'Paseo de la Castellana, 261',d:{es:'Urgencias 24 h, norte. Tiene hospital infantil y maternidad.',en:'24h emergency, north. Children\'s and maternity hospital.'}},
+  {cat:'health',n:'Hospital Gregorio Marañón (urgencias)',lat:40.4180,lng:-3.6705,a:'Calle del Doctor Esquerdo, 46',d:{es:'Urgencias 24 h, cerca del Retiro.',en:'24h emergency, near Retiro.'}},
+  {cat:'health',n:'Hospital 12 de Octubre (urgencias)',lat:40.3755,lng:-3.6985,a:'Avenida de Córdoba, s/n',d:{es:'Urgencias 24 h, sur (Usera, Villaverde, Carabanchel).',en:'24h emergency, south.'}},
+  {cat:'health',n:'Hospital Clínico San Carlos (urgencias)',lat:40.4400,lng:-3.7190,a:'Calle del Profesor Martín Lagos, s/n',d:{es:'Urgencias 24 h, Moncloa.',en:'24h emergency, Moncloa.'}},
+  {cat:'health',n:'Hospital Ramón y Cajal (urgencias)',lat:40.4880,lng:-3.6940,a:'Carretera de Colmenar Viejo, km 9,1',d:{es:'Urgencias 24 h, extremo norte.',en:'24h emergency, far north.'}},
+  {cat:'health',n:'Hospital de La Princesa (urgencias)',lat:40.4305,lng:-3.6740,a:'Calle de Diego de León, 62',d:{es:'Urgencias 24 h, Salamanca.',en:'24h emergency, Salamanca district.'}},
+  {cat:'health',n:'Hospital Infantil Niño Jesús',lat:40.4175,lng:-3.6785,a:'Avenida de Menéndez Pelayo, 65',d:{es:'Hospital de niños, junto al Retiro.',en:'Children\'s hospital next to Retiro.'}},
+  {cat:'air',n:'Aeropuerto de Barajas — T4',lat:40.4919,lng:-3.5935,d:{es:'Aquí llegan casi todos los vuelos de Avianca e Iberia desde Colombia. Metro L8, Cercanías C1 y Bus Exprés.',en:'Most flights from Colombia land here. Metro L8, Cercanías C1, Airport Express.'}},
+  {cat:'air',n:'Aeropuerto de Barajas — T1, T2, T3',lat:40.4720,lng:-3.5650,d:{es:'Otras aerolíneas. Metro L8 y Bus Exprés.',en:'Other airlines. Metro L8 and Airport Express.'}},
+  {cat:'air',n:'Estación de Atocha',lat:40.4066,lng:-3.6892,d:{es:'Trenes AVE al sur y este, Cercanías y Metro L1.',en:'High-speed trains south and east, Cercanías, Metro L1.'}},
+  {cat:'air',n:'Estación de Chamartín',lat:40.4722,lng:-3.6825,d:{es:'Trenes al norte (Segovia, Valladolid), Cercanías y Metro L1 y L10.',en:'Trains north, Cercanías, Metro L1 and L10.'}},
+  {cat:'air',n:'Estación Sur de Autobuses',lat:40.3955,lng:-3.6780,d:{es:'Buses a toda España. Metro Méndez Álvaro (L6).',en:'Coaches across Spain. Metro Méndez Álvaro (L6).'}}
+];
+
+/* ---------- Map ---------- */
+let map, layers={}, activeCats=new Set(Object.keys(CATS)), meMarker, stopsLayer, linesLayer, linesOn=false, lineLayers={};
+function pinIcon(c,ic){ return L_.divIcon({className:'',html:`<div class="pin" style="background:${c}"><span>${ic}</span></div>`,iconSize:[30,30],iconAnchor:[15,30],popupAnchor:[0,-28]}); }
+const L_ = window.L;
+function initMap(){
+  if(map){ setTimeout(()=>map.invalidateSize(),100); return; }
+  if(!L_){ $('#map').innerHTML='<p class="small muted" style="padding:20px">Mapa no disponible sin conexión.</p>'; return; }
+  map = L_.map('map',{zoomControl:true}).setView([40.4168,-3.7038],13);
+  L_.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'© OpenStreetMap © CARTO'}).addTo(map);
+  for(const k in CATS){ layers[k]=L_.layerGroup().addTo(map); }
+  PLACES.forEach(p=>{
+    const c=CATS[p.cat];
+    const html = `<b>${esc(p.n)}</b><br><span>${esc(L(p.d))}</span>${p.a?`<br><small>${esc(p.a)}</small>`:''}<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${p.tel?`<a class="btn sm red" style="color:#fff" href="tel:${p.tel}">📞 ${L({es:'Llamar',en:'Call'})}</a>`:''}${p.web?`<a class="btn sm" style="color:#fff" href="${p.web}" target="_blank" rel="noopener">🌐 Web</a>`:''}<a class="btn sm ghost" href="https://www.google.com/maps/dir/?api=1&travelmode=transit&destination=${p.lat},${p.lng}" target="_blank" rel="noopener">🧭 ${L({es:'Cómo llegar',en:'Directions'})}</a></div>`;
+    L_.marker([p.lat,p.lng],{icon:pinIcon(c.c,c.ic)}).bindPopup(html).addTo(layers[p.cat]);
+  });
+  LUGARES.forEach(p=>{ const lat=p.c.includes('latino'); L_.marker([p.lat,p.lng],{icon:pinIcon(lat?CATS.latino.c:CATS.sights.c,lat?'🫓':'🏛️')}).addTo(layers[lat?'latino':'sights']).bindPopup(`<b>${esc(p.n)}</b><br><span>${esc(L(p.d))}</span><div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap"><button class="btn sm red" onclick="openPlace('${p.id}')">${L({es:'Ver más',en:'More'})}</button><button class="btn sm ghost" onclick="routeTo('${p.id}')">🧭 ${L({es:'Cómo llegar',en:'Directions'})}</button></div>`); });
+  stopsLayer = L_.layerGroup().addTo(map);
+  renderChips();
+  setTimeout(()=>map.invalidateSize(),150);
+}
+function renderChips(){
+  $('#map-chips').innerHTML = Object.entries(CATS).map(([k,c])=>`<button class="chip ${activeCats.has(k)?'on':''}" onclick="toggleCat('${k}')">${c.ic} ${L(c.n)}</button>`).join('');
+}
+function toggleCat(k){ if(activeCats.has(k)){activeCats.delete(k); map.removeLayer(layers[k]);} else {activeCats.add(k); map.addLayer(layers[k]);} renderChips(); }
+async function locateMe(){
+  initMap();
+  try{ const c=await getPos(); const ll=[c.latitude,c.longitude];
+    if(meMarker) meMarker.setLatLng(ll); else meMarker=L_.circleMarker(ll,{radius:9,color:'#fff',weight:3,fillColor:'#0A84FF',fillOpacity:1}).addTo(map).bindPopup(L({es:'Estás aquí',en:'You are here'}));
+    map.setView(ll,16); meMarker.openPopup(); return c;
+  }catch(e){ toast(L({es:'No pude obtener tu ubicación. Activa el GPS y da permiso.',en:'Could not get your location. Enable GPS and allow access.'})); return null; }
+}
+async function overpass(q){
+  const r = await fetch(OVERPASS+'?data='+encodeURIComponent(q));
+  if(!r.ok) throw r.status;
+  return r.json();
+}
+async function nearbyStops(){
+  const c = await locateMe(); if(!c) return;
+  const info=$('#map-info'); info.innerHTML='<span class="spin"></span> '+L({es:'Buscando paradas…',en:'Finding stops…'});
+  try{
+    const a=`(around:500,${c.latitude},${c.longitude})`;
+    const data = await overpass(`[out:json][timeout:25];(node${a}[railway=station];node${a}[station=subway];node${a}[railway=subway_entrance];node${a}[highway=bus_stop];);out body 60;`);
+    const els=(data?.elements||[]).filter(e=>e.tags);
+    stopsLayer.clearLayers();
+    if(!els.length){ info.innerHTML=`<p class="small muted">${L({es:'No encontré paradas a menos de 500 m.',en:'No stops within 500 m.'})}</p>`; return; }
+    let nb=0, nm=0;
+    els.forEach(s=>{
+      const t=s.tags, isBus=t.highway==='bus_stop', isEnt=t.railway==='subway_entrance';
+      if(isBus) nb++; else nm++;
+      const lines = t.route_ref ? `<br><small>${L({es:'Líneas',en:'Lines'})}: ${esc(t.route_ref)}</small>` : '';
+      const ref = isBus && t.ref ? `<br><small>${L({es:'Parada nº',en:'Stop no.'})} <b>${esc(t.ref)}</b> — ${L({es:'búscala en la app EMT Madrid para ver cuánto falta',en:'check it in the EMT Madrid app for live times'})}</small>` : '';
+      L_.marker([s.lat,s.lon],{icon:pinIcon(isBus?'#EB0A1E':'#005AA9',isBus?'🚌':(isEnt?'Ⓜ️':'🚇'))}).addTo(stopsLayer)
+        .bindPopup(`<b>${esc(t.name||(isBus?L({es:'Parada de bus',en:'Bus stop'}):L({es:'Acceso al metro',en:'Metro entrance'})))}</b>${lines}${ref}<br><a class="btn sm ghost mt" href="https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=${s.lat},${s.lon}" target="_blank" rel="noopener">🚶 ${L({es:'Ir',en:'Go'})}</a>`);
+    });
+    info.innerHTML=`<p class="small muted">${nm} ${L({es:'accesos/estaciones y',en:'stations/entrances and'})} ${nb} ${L({es:'paradas de bus a menos de 500 m. Toca una para ver detalles.',en:'bus stops within 500 m. Tap one for details.'})}</p>`;
+  }catch(e){ info.innerHTML=`<p class="small muted">${L({es:'No se pudieron cargar las paradas. Intenta de nuevo en un momento.',en:'Could not load stops. Try again shortly.'})}</p>`; }
+}
+async function toggleTubeLines(forceOn){
+  initMap();
+  if(linesOn && !forceOn){ map.removeLayer(linesLayer); linesOn=false; return; }
+  if(linesLayer){ if(!linesOn) map.addLayer(linesLayer); linesOn=true; return; }
+  const btn=$('#btn-lines'); btn.disabled=true; const old=btn.innerHTML; btn.innerHTML='<span class="spin"></span>';
+  try{
+    let data = store.get('metro_geo',null);
+    if(!data || Date.now()-data.t>30*864e5){
+      const j = await overpass('[out:json][timeout:90];relation["route"="subway"](40.25,-3.95,40.62,-3.40);out geom;');
+      data = {t:Date.now(), r:(j.elements||[]).map(r=>({ref:String(r.tags?.ref||'').replace(/^L/i,''),name:r.tags?.name||'',col:r.tags?.colour||'',
+        w:(r.members||[]).filter(m=>m.type==='way'&&m.geometry&&!m.role).map(m=>m.geometry.map(g=>[+g.lat.toFixed(5),+g.lon.toFixed(5)])),
+        s:(r.members||[]).filter(m=>m.type==='node'&&/stop|station/.test(m.role||'')&&m.lat).map(m=>[+m.lat.toFixed(5),+m.lon.toFixed(5)])}))};
+      if(!data.r.length) throw 0;
+      store.set('metro_geo',data);
+    }
+    linesLayer=L_.layerGroup().addTo(map); linesOn=true;
+    data.r.forEach(r=>{
+      const col = LINE_COLORS[r.ref] || r.col || '#333';
+      const lay = lineLayers[r.ref] || (lineLayers[r.ref]=L_.featureGroup().addTo(linesLayer));
+      r.w.forEach(seg=>L_.polyline(seg,{color:col,weight:4,opacity:.9}).addTo(lay).bindTooltip(L({es:'Línea ',en:'Line '})+r.ref));
+      r.s.forEach(p=>L_.circleMarker(p,{radius:3,color:'#000',weight:1.2,fillColor:'#fff',fillOpacity:1}).addTo(lay));
+    });
+    $('#map-info').innerHTML=`<p class="small muted">${L({es:'Líneas del metro © colaboradores de OpenStreetMap.',en:'Metro lines © OpenStreetMap contributors.'})}</p>`;
+  }catch(e){
+    linesLayer=null; linesOn=false;
+    $('#map-info').innerHTML=`<p class="small muted">${L({es:'No se pudieron cargar las líneas ahora. Puedes ver el plano oficial en metromadrid.es.',en:'Could not load the lines now. See the official map at metromadrid.es.'})}</p>`;
+  }
+  btn.disabled=false; btn.innerHTML=old;
+}
+
+/* ---------- Español de España: diálogos ----------
+   l: [quién, frase como se dice en Madrid, cómo lo dirías en Colombia/Latinoamérica ('' = igual), inglés] */
+const SITS = [
+ {id:'border',ic:'🛂',n:{es:'Control de pasaportes en Barajas',en:'Passport control at Barajas'},ctx:{es:'Llegada al aeropuerto. Ten a mano pasaporte, billete de vuelta, carta de invitación o reserva, seguro médico y prueba de dinero.',en:'Arrival at the airport. Have passport, return ticket, invitation letter or booking, insurance and proof of funds ready.'},
+  l:[['A','Buenos días. Pasaporte, por favor.','','Good morning. Passport, please.'],
+     ['B','Buenos días. Aquí tiene.','','Good morning. Here you are.'],
+     ['A','¿Cuál es el motivo de su viaje?','¿A qué viene?','What is the purpose of your trip?'],
+     ['B','Vengo de turismo, a visitar a mi familia. Me quedo tres semanas.','','I\'m here as a tourist to visit my family. I\'ll stay three weeks.'],
+     ['A','¿Dónde se va a alojar?','¿Dónde se va a quedar?','Where will you be staying?'],
+     ['B','En casa de mi hermana. Aquí tengo la carta de invitación.','','At my sister\'s home. Here is the invitation letter.'],
+     ['A','¿Lleva billete de vuelta y seguro médico?','¿Tiene tiquete de regreso y seguro médico?','Do you have a return ticket and health insurance?'],
+     ['B','Sí, aquí tiene los dos.','','Yes, here are both.'],
+     ['A','Muy bien. Bienvenido a España.','','Very well. Welcome to Spain.']],
+  tip:{es:'Lleva todo impreso. La carta de invitación la tramita en una comisaría de Policía Nacional la persona que te recibe. Responde corto y con la verdad: entrar como turista no permite trabajar.',en:'Carry printed copies. Your host requests the invitation letter at a National Police station. Keep answers short and truthful.'}},
+ {id:'metro',ic:'🚇',n:{es:'En el metro',en:'On the metro'},ctx:{es:'Preguntando qué línea tomar.',en:'Asking which line to take.'},
+  l:[['B','Perdone, para ir a Sol, ¿qué línea cojo?','Disculpe, para ir a Sol, ¿qué línea tomo?','Excuse me, which line do I take to Sol?'],
+     ['A','Coge la línea 1 dirección Pinar de Chamartín y te bajas en Sol.','Tome la línea 1 hacia Pinar de Chamartín y se baja en Sol.','Take line 1 towards Pinar de Chamartín and get off at Sol.'],
+     ['B','¿Puedo pagar con la tarjeta del banco?','','Can I pay with my bank card?'],
+     ['A','Sí, la acercas al torno y ya está.','Sí, la pasa por el torniquete y listo.','Yes, just tap it on the gate.'],
+     ['B','¿Tengo que hacer transbordo?','¿Tengo que cambiar de línea?','Do I have to change lines?'],
+     ['A','No, es directo. Son cuatro paradas.','','No, it\'s direct. Four stops.'],
+     ['B','Vale, ¡muchas gracias!','Listo, ¡muchas gracias!','OK, thanks a lot!']],
+  tip:{es:'"Coger" en España es tomar o agarrar, sin doble sentido: lo vas a oír todo el día. "Torno" = torniquete; "andén" = plataforma. En las escaleras mecánicas ponte a la derecha.',en:'"Coger" simply means "to take" in Spain. "Torno" = ticket gate; "andén" = platform.'}},
+ {id:'lost',ic:'🧭',n:{es:'Me he perdido',en:'I\'m lost'},ctx:{es:'Pedir indicaciones en la calle.',en:'Asking for directions in the street.'},
+  l:[['B','Perdone, ¿me puede ayudar? Me he perdido.','Disculpe, ¿me ayuda? Me perdí.','Excuse me, can you help me? I\'m lost.'],
+     ['A','Claro, ¿adónde vas?','Claro, ¿para dónde va?','Sure, where are you going?'],
+     ['B','A esta dirección. ¿Está lejos?','A esta dirección. ¿Queda lejos?','To this address. Is it far?'],
+     ['A','Qué va, está a diez minutos andando. Sigue todo recto y gira a la derecha en el semáforo.','No, queda a diez minutos caminando. Siga derecho y voltee a la derecha en el semáforo.','Not at all, ten minutes on foot. Go straight on and turn right at the lights.'],
+     ['B','¿Todo recto y luego a la derecha?','¿Derecho y después a la derecha?','Straight on, then right?'],
+     ['A','Eso es. Si no, pregunta en cualquier bar.','Exacto.','That\'s it. Otherwise ask in any bar.']],
+  tip:{es:'"Andando" = caminando. "Todo recto" = derecho. "Qué va" = para nada. Aquí te tutean aunque no te conozcan: no es falta de respeto.',en:'Strangers will use "tú" with you — it\'s not rude.'}},
+ {id:'bar',ic:'🍺',n:{es:'En el bar',en:'At the bar'},ctx:{es:'Pedir algo de tomar y de comer.',en:'Ordering a drink and a snack.'},
+  l:[['A','¡Hola! ¿Qué te pongo?','¡Hola! ¿Qué le sirvo?','Hi! What can I get you?'],
+     ['B','Ponme una caña y un café con leche, por favor.','Me da una cerveza pequeña y un café con leche, por favor.','A small draught beer and a white coffee, please.'],
+     ['A','¿Algo de comer? Tenemos tortilla y croquetas.','','Anything to eat? We have Spanish omelette and croquettes.'],
+     ['B','Un pincho de tortilla, por favor.','Una porción de tortilla de papa, por favor.','A slice of tortilla, please.'],
+     ['A','¡Marchando!','¡Ya sale!','Coming right up!'],
+     ['B','¿Me cobras cuando puedas?','La cuenta, por favor.','Can I pay when you have a moment?'],
+     ['A','Son cuatro con cincuenta.','Son 4,50 euros.','That\'s four fifty.']],
+  tip:{es:'⚠️ No digas "¿me regala…?": en España entienden que lo quieres gratis. Di "¿me pones…?" o "¿me das…?". La cuenta se paga al final y la propina no es obligatoria.',en:'Ask "¿me pones…?". You pay at the end; tipping is optional.'}},
+ {id:'super',ic:'🛒',n:{es:'En el supermercado',en:'At the supermarket'},ctx:{es:'Buscar productos y pagar.',en:'Finding products and paying.'},
+  l:[['B','Perdona, ¿dónde están las patatas?','Disculpe, ¿dónde están las papas?','Excuse me, where are the potatoes?'],
+     ['A','Al fondo, en la frutería.','Al fondo, en la sección de frutas y verduras.','At the back, in fruit and veg.'],
+     ['B','¿Y tenéis harina para arepas?','¿Y tienen harina para arepas?','And do you have arepa flour?'],
+     ['A','Sí, en el pasillo de productos internacionales.','','Yes, in the international aisle.'],
+     ['A','¿Necesitas bolsa? Se cobra aparte.','','Do you need a bag? It\'s charged separately.'],
+     ['B','No, gracias, traigo la mía. ¿Puedo pagar con tarjeta?','','No thanks, I brought my own. Can I pay by card?'],
+     ['A','Claro, acércala al datáfono.','Claro, pásela por el datáfono.','Sure, tap it on the card reader.']],
+  tip:{es:'"Vosotros / tenéis" es el plural de confianza en España. Tú puedes seguir diciendo "ustedes": te entienden perfecto. Las bolsas se pagan: lleva la tuya.',en:'"Vosotros" is the informal plural in Spain; "ustedes" is fine too.'}},
+ {id:'pharm',ic:'💊',n:{es:'En la farmacia',en:'At the pharmacy'},ctx:{es:'Pedir algo para un resfriado.',en:'Asking for something for a cold.'},
+  l:[['B','Buenas, ¿tiene algo para el resfriado?','Buenas, ¿tiene algo para la gripa?','Hello, do you have something for a cold?'],
+     ['A','¿Tienes fiebre o tos?','','Do you have a fever or a cough?'],
+     ['B','Tengo tos y me duele la garganta.','','I have a cough and a sore throat.'],
+     ['A','Te doy este jarabe y unas pastillas para chupar.','','I\'ll give you this syrup and some lozenges.'],
+     ['B','¿Necesito receta?','¿Necesito fórmula médica?','Do I need a prescription?'],
+     ['A','No, esto es sin receta. Los antibióticos sí necesitan receta.','','No, these are over the counter. Antibiotics need a prescription.']],
+  tip:{es:'"Resfriado" o "constipado" = gripa (¡"constipado" no es estreñido!). "Receta" = fórmula médica. De noche abre la "farmacia de guardia": la dirección aparece en la puerta de cualquier farmacia.',en:'"Constipado" means having a cold. Night pharmacies are listed on every pharmacy door.'}},
+ {id:'health',ic:'🩺',n:{es:'Cita en el centro de salud',en:'Booking at the health centre'},ctx:{es:'Pedir médico y sacar la tarjeta sanitaria.',en:'Seeing a doctor and getting your health card.'},
+  l:[['B','Buenos días, quiero pedir cita con el médico de cabecera.','Buenos días, quiero una cita con el médico general.','Good morning, I\'d like an appointment with the GP.'],
+     ['A','¿Tienes tarjeta sanitaria?','¿Tiene el carné de salud?','Do you have a health card?'],
+     ['B','Todavía no. Acabo de empadronarme. ¿Cómo la saco?','','Not yet. I\'ve just registered on the padrón. How do I get it?'],
+     ['A','Rellena esta solicitud y trae el pasaporte y el volante de empadronamiento.','Llene este formulario y traiga el pasaporte y el certificado de empadronamiento.','Fill in this form and bring your passport and padrón certificate.'],
+     ['B','¿Y si me pongo malo antes?','¿Y si me enfermo antes?','What if I get ill before then?'],
+     ['A','En urgencias te atienden siempre. Si es grave, llama al 112.','','A&E will always treat you. If it\'s serious, call 112.']],
+  tip:{es:'"Médico de cabecera" = médico general. "Rellenar" = llenar. "Ponerse malo" = enfermarse. "Volante" = certificado del padrón.',en:'"Médico de cabecera" = GP. "Volante" = padrón certificate.'}},
+ {id:'padron',ic:'📝',n:{es:'Empadronarme',en:'Registering on the padrón'},ctx:{es:'En la oficina de atención a la ciudadanía del Ayuntamiento, con cita.',en:'At the city council office, by appointment.'},
+  l:[['B','Hola, tengo cita para empadronarme.','Hola, tengo cita para inscribirme en el padrón.','Hi, I have an appointment to register on the padrón.'],
+     ['A','Muy bien. ¿Me dejas el pasaporte y el contrato de alquiler?','¿Me presta el pasaporte y el contrato de arriendo?','Can I see your passport and rental contract?'],
+     ['B','Vivo en una habitación. Traigo la autorización del titular del piso.','Vivo en una pieza. Traigo la autorización del que tiene el apartamento.','I rent a room. I have the main tenant\'s authorisation.'],
+     ['A','Perfecto. ¿Y la fotocopia de su DNI?','¿Y la copia de su cédula?','Great. And a copy of their ID?'],
+     ['B','Sí, aquí está. ¿Cuándo me dan el volante?','','Yes, here it is. When do I get the certificate?'],
+     ['A','Te lo doy ahora mismo.','','Right now.']],
+  tip:{es:'"Alquiler" = arriendo; "piso" = apartamento; "DNI" = cédula española. Empadronarse es un derecho y una obligación de todo el que vive en el municipio. La cita es gratis: pídela en el 010 o en madrid.es.',en:'Registering is a right and a duty for everyone living in the city. Book free on 010 or madrid.es.'}},
+ {id:'rent',ic:'🔑',n:{es:'Alquilar una habitación',en:'Renting a room'},ctx:{es:'Llamar por un anuncio.',en:'Calling about an ad.'},
+  l:[['B','Hola, llamo por la habitación del anuncio. ¿Sigue libre?','Hola, llamo por el cuarto que arriendan. ¿Todavía está disponible?','Hi, I\'m calling about the room. Is it still available?'],
+     ['A','Sí. Son 450 euros al mes con gastos incluidos.','Sí. Son 450 euros al mes con servicios incluidos.','Yes. 450 euros a month, bills included.'],
+     ['B','¿Cuánto es la fianza?','¿Cuánto es el depósito?','How much is the deposit?'],
+     ['A','Un mes. ¿Cuándo quieres venir a verla?','','One month. When would you like to see it?'],
+     ['B','¿Puedo ir esta tarde? ¿Y me podría empadronar ahí?','','Can I come this afternoon? And could I register at that address?'],
+     ['A','Sí, sin problema. Te hago contrato.','','Yes, no problem. I\'ll give you a contract.']],
+  tip:{es:'"Gastos" = servicios (luz, agua, gas, internet). "Fianza" = depósito. Pregunta siempre si te dejan empadronarte: sin padrón no hay tarjeta sanitaria ni prueba de tiempo para los papeles.',en:'Always ask if you can register (empadronarte) there.'}},
+ {id:'job',ic:'💼',n:{es:'Entrevista de trabajo',en:'Job interview'},ctx:{es:'Para un puesto en hostelería.',en:'For a hospitality job.'},
+  l:[['A','Cuéntame un poco de tu experiencia.','','Tell me a bit about your experience.'],
+     ['B','He trabajado cinco años de camarero en Medellín.','Trabajé cinco años de mesero en Medellín.','I worked as a waiter in Medellín for five years.'],
+     ['A','¿Tienes permiso de trabajo?','','Do you have a work permit?'],
+     ['B','Sí, tengo la TIE con autorización para trabajar.','','Yes, I have my residence card with permission to work.'],
+     ['A','La jornada es partida, de lunes a viernes.','Es turno partido, de lunes a viernes.','It\'s a split shift, Monday to Friday.'],
+     ['B','¿Me daríais de alta en la Seguridad Social desde el primer día?','¿Me afiliarían a la seguridad social desde el primer día?','Would you register me with Social Security from day one?'],
+     ['A','Por supuesto, con contrato indefinido.','Claro, con contrato a término indefinido.','Of course, with a permanent contract.']],
+  tip:{es:'"Camarero" = mesero. "Jornada partida" = trabajas mañana y tarde con una pausa larga. "Dar de alta" = afiliarte a la Seguridad Social: es obligatorio desde el primer día.',en:'"Dar de alta" = registering you with Social Security, mandatory from day one.'}},
+ {id:'bank',ic:'🏦',n:{es:'Abrir cuenta en el banco',en:'Opening a bank account'},ctx:{es:'En una sucursal.',en:'At a branch.'},
+  l:[['B','Buenos días, quiero abrir una cuenta.','','Good morning, I\'d like to open an account.'],
+     ['A','¿Tienes NIE o solo pasaporte?','','Do you have an NIE or just a passport?'],
+     ['B','Tengo pasaporte y NIE. ¿La cuenta tiene comisiones?','Tengo pasaporte y NIE. ¿Cobra cuota de manejo?','I have a passport and NIE. Are there fees?'],
+     ['A','Si domicilias la nómina, no hay comisiones.','Si le consignan el sueldo aquí, no cobra cuota de manejo.','If your salary is paid in, there are no fees.'],
+     ['B','¿Puedo usar Bizum?','','Can I use Bizum?'],
+     ['A','Sí, lo activas en la app con tu número de móvil.','Sí, lo activa en la app con su número de celular.','Yes, activate it in the app with your mobile number.']],
+  tip:{es:'"Nómina" = sueldo o colilla de pago. "Domiciliar" = que te consignen ahí o que se paguen recibos solos. "Comisiones" = cuota de manejo. Bizum es como Nequi: todo el mundo lo usa para pagarse entre personas.',en:'Bizum is the instant person-to-person payment everyone uses.'}},
+ {id:'police',ic:'👮',n:{es:'Poner una denuncia',en:'Reporting a theft'},ctx:{es:'En una comisaría de Policía Nacional.',en:'At a National Police station.'},
+  l:[['B','Buenas, vengo a poner una denuncia. Me han robado la cartera.','Buenas, vengo a denunciar que me robaron la billetera.','Hello, I\'d like to report a theft. My wallet has been stolen.'],
+     ['A','¿Dónde y a qué hora ha sido?','¿Dónde y a qué hora fue?','Where and when did it happen?'],
+     ['B','En el metro, en la estación de Sol, sobre las seis.','En el metro, en la estación Sol, como a las seis.','On the metro, at Sol station, around six.'],
+     ['A','¿Qué llevabas en la cartera?','¿Qué tenía en la billetera?','What was in the wallet?'],
+     ['B','El pasaporte, dos tarjetas y cincuenta euros.','','My passport, two cards and fifty euros.'],
+     ['A','Aquí tienes copia de la denuncia. Con ella vas al consulado.','','Here is a copy of the report. Take it to the consulate.']],
+  tip:{es:'En Madrid se usa "me han robado" para lo que acaba de pasar. "Cartera" = billetera. Puedes empezar la denuncia por internet en policia.es y firmarla luego en la comisaría.',en:'You can start the report online at policia.es and sign it at the station.'}},
+ {id:'chat',ic:'👋',n:{es:'Charla con vecinos',en:'Chatting with neighbours'},ctx:{es:'Conociendo gente en el edificio.',en:'Meeting people in your building.'},
+  l:[['A','¡Hola! ¿Eres nuevo en el edificio?','','Hi! Are you new in the building?'],
+     ['B','Sí, me mudé la semana pasada. Soy de Colombia.','','Yes, I moved in last week. I\'m from Colombia.'],
+     ['A','¡Qué guay! ¿Y qué tal Madrid?','¡Qué chévere! ¿Y cómo le ha parecido Madrid?','Cool! How are you finding Madrid?'],
+     ['B','Me mola mucho, pero echo de menos la comida de mi tierra.','Me gusta mucho, pero extraño la comida de mi tierra.','I love it, but I miss the food from home.'],
+     ['A','Pues en Tetuán hay sitios colombianos buenísimos.','','Well, there are great Colombian places in Tetuán.'],
+     ['B','¡Vale, gracias! Nos vemos.','¡Listo, gracias! Nos vemos.','Great, thanks! See you.']],
+  tip:{es:'"Guay" = chévere. "Mola" = me gusta. "Echar de menos" = extrañar. "Vale" sirve para casi todo: ok, listo, de acuerdo. Al saludar se dan dos besos, primero en la mejilla derecha.',en:'"Vale" means OK. People greet with two kisses, right cheek first.'}}
+];
+const POCKET = [
+ ['¿Me pones un café con leche, por favor?','En casa: "¿me regala un café con leche?" (aquí no digas "regalar")','Can I have a white coffee, please?'],
+ ['¿Cuánto es?','¿Cuánto vale? / ¿Cuánto le debo?','How much is it?'],
+ ['¿Puedo pagar con tarjeta?','Igual que en casa','Can I pay by card?'],
+ ['¿Dónde está la boca de metro más cercana?','"Boca de metro" = entrada a la estación','Where is the nearest metro entrance?'],
+ ['Perdone, ¿me deja pasar?','Disculpe, ¿me da permiso?','Excuse me, can I get past?'],
+ ['¿Me lo puede repetir más despacio?','¿Me repite más despacio?','Could you say it again more slowly?'],
+ ['Me he perdido','Me perdí','I\'m lost'],
+ ['Necesito un médico','Igual que en casa','I need a doctor'],
+ ['¡Llame al 112, por favor!','Aquí el número de emergencias es el 112','Call 112, please!'],
+ ['Me han robado el móvil','Me robaron el celular','My phone has been stolen'],
+ ['Quiero pedir cita','Quiero sacar una cita','I\'d like to make an appointment'],
+ ['Vale, gracias','Listo, gracias / Bueno, gracias','OK, thanks'],
+ ['¿Me cobras?','La cuenta, por favor','Can I pay, please?'],
+ ['Estoy buscando curro','Estoy buscando trabajo / camello','I\'m looking for work']
+];
+const SLANG = [
+ ['Vale','Listo, ok, de acuerdo','OK'],['Guay','Chévere, bacano','Cool'],['Mola / me mola','Me gusta','I like it'],
+ ['Tío / tía','Parce, man, vieja (amigo/a)','Mate, dude'],['Coger','Tomar, agarrar (¡sin doble sentido!)','To take'],
+ ['Regalar','Dar gratis — no lo uses para pedir en tiendas','To give for free'],
+ ['Móvil','Celular','Mobile phone'],['Ordenador','Computador','Computer'],['Piso','Apartamento','Flat'],
+ ['Coche','Carro','Car'],['Conducir','Manejar','To drive'],['Aparcar','Parquear','To park'],
+ ['Billete','Tiquete, pasaje (y también el billete de dinero)','Ticket / banknote'],
+ ['Currar / curro','Camellar / trabajo','To work / job'],['Pasta','Plata (dinero)','Money'],
+ ['Zumo','Jugo','Juice'],['Grifo','Llave del agua','Tap'],['Cola','Fila','Queue'],
+ ['Constipado','Con gripa (¡no estreñido!)','Having a cold'],['Enfadarse','Ponerse bravo','To get angry'],
+ ['¡Qué fuerte!','¡Qué impresión!, ¡no puede ser!','No way!'],['Echar de menos','Extrañar','To miss'],
+ ['Bocadillo','Sándwich en pan baguette','Baguette sandwich'],['Jersey','Saco, suéter','Sweater'],
+ ['Ahorita','Casi no se usa: di "ahora" o "luego"','Now / later']
+];
+let curSit=null;
+function renderSits(){
+  $('#sits').innerHTML = SITS.map(s=>`<button class="sit ${curSit===s.id?'on':''}" onclick="openSit('${s.id}')"><span class="em">${s.ic}</span><b>${L(s.n)}</b></button>`).join('');
+  $('#pocket').innerHTML = POCKET.map((p,i)=>`<div class="pk"><div><div class="en">${esc(p[0])}</div><div class="es">${esc(LANG==='es'?p[1]:p[2])}</div></div><button class="say" onclick="speak(POCKET[${i}][0])">🔊</button></div>`).join('');
+  $('#slang').innerHTML = `<tr><th>${L({es:'En España',en:'In Spain'})}</th><th style="tex
