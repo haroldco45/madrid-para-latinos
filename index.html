@@ -267,6 +267,14 @@ details.acc ol li{margin:5px 0}
 .goal{background:var(--red);color:#fff;border-radius:var(--r);padding:18px;text-align:center}
 .goal b{font-family:'Barlow Condensed';font-size:1.8rem;text-transform:uppercase;display:block}
 .ychips{display:flex;flex-wrap:wrap;gap:8px}
+.qz-opt{display:block;width:100%;text-align:left;border:2px solid var(--line);background:#fff;border-radius:10px;padding:11px 12px;margin-top:8px;font-size:.98rem;font-family:inherit;color:var(--ink)}
+.qz-opt:hover{border-color:var(--ink)}
+.qz-opt.ok{border-color:var(--ok);background:#E3F5EA}
+.qz-opt.bad{border-color:var(--red);background:#FDE7E9}
+.qz-opt.sel{border-color:var(--ink);background:var(--bg-2)}
+.qz-top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.qz-q{font-weight:700;font-size:1.08rem;margin-top:10px}
+.qz-timer{font-family:'Barlow Condensed';font-weight:800;font-size:1.3rem;color:var(--red)}
 .ychips .chip{white-space:normal;text-align:left;max-width:100%;line-height:1.25}
 .nat-hero .stat b{font-size:1.35rem;white-space:nowrap}
 
@@ -496,6 +504,22 @@ footer.foot b{color:var(--ink)}
     <div id="nat-out" class="mt"></div>
   </div>
 
+  <div class="card mt" id="ccse-card">
+    <h3 data-t="ccseT">📝 Simulador del examen CCSE</h3>
+    <p class="small muted" data-t="ccseS">Igual que el examen real: 25 preguntas en 5 tareas, 45 minutos, apruebas con 15 aciertos. Preguntas de práctica al estilo del Instituto Cervantes.</p>
+    <div id="ccse-box" class="mt"></div>
+  </div>
+  <div class="card mt">
+    <h3 data-t="ccseOffT">📚 Materiales oficiales (examenes.cervantes.es)</h3>
+    <p class="small muted" data-t="ccseOffS">Las preguntas del examen real salen del manual oficial de 300 preguntas. Descárgalo y estúdialo junto con el simulador.</p>
+    <div class="grid mt" style="gap:8px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))">
+      <a class="vlink" href="https://examenes.cervantes.es/sites/default/files/Manual%20CCSE%202026.pdf" target="_blank" rel="noopener"><span class="play">📘</span><span><b data-t="lnkManual">Manual CCSE 2026 (PDF)</b><br><small class="muted" data-t="lnkManualS">Las 300 preguntas oficiales</small></span></a>
+      <a class="vlink" href="https://examenes.cervantes.es/es/ccse/preparar-prueba" target="_blank" rel="noopener"><span class="play">🧾</span><span><b data-t="lnkPrep">Prueba modelo y guía</b><br><small class="muted" data-t="lnkPrepS">Examen de muestra, guía y glosario</small></span></a>
+      <a class="vlink" href="https://agenda.cervantes.es/sites/default/files/especificaciones_prueba_ccse.pdf" target="_blank" rel="noopener"><span class="play">📐</span><span><b data-t="lnkSpec">Especificaciones de la prueba</b><br><small class="muted" data-t="lnkSpecS">Cómo está armado el examen</small></span></a>
+      <a class="vlink" href="https://examenes.cervantes.es/es/ccse" target="_blank" rel="noopener"><span class="play">✍️</span><span><b data-t="lnkReg">Inscripción y fechas</b><br><small class="muted" data-t="lnkRegS">Centros y convocatorias</small></span></a>
+    </div>
+  </div>
+
   <div class="sec-head"><div><h2 data-t="roadT">Los 10 pasos</h2><p data-t="roadS">Marca cada paso cuando lo completes. Se guarda en tu celular.</p></div></div>
   <div class="progress"><i id="nat-prog"></i></div>
   <p class="small muted mt" id="nat-prog-t"></p>
@@ -690,6 +714,14 @@ const T = {
   stTotal:{es:'lugares',en:'places'}, stFree:{es:'gratis',en:'free'}, stMine:{es:'quiero ir / ya fui',en:'want / visited'},
   nearMe:{es:'📍 Cerca',en:'📍 Near me'}, itinT:{es:'Itinerarios listos',en:'Ready-made itineraries'}, itinS:{es:'Recorridos de un día. Toca para verlos dibujados en el mapa.',en:'One-day routes. Tap to see them on the map.'},
   nPlaces:{es:'Lugares',en:'Places'},
+  ccseT:{es:'📝 Simulador del examen CCSE',en:'📝 CCSE exam simulator'},
+  ccseS:{es:'Igual que el examen real: 25 preguntas en 5 tareas, 45 minutos, apruebas con 15 aciertos. Preguntas de práctica al estilo del Instituto Cervantes.',en:'Like the real exam: 25 questions in 5 tasks, 45 minutes, pass with 15. Practice questions in the Instituto Cervantes style (in Spanish, like the exam).'},
+  ccseOffT:{es:'📚 Materiales oficiales (examenes.cervantes.es)',en:'📚 Official materials (examenes.cervantes.es)'},
+  ccseOffS:{es:'Las preguntas del examen real salen del manual oficial de 300 preguntas. Descárgalo y estúdialo junto con el simulador.',en:'Real exam questions come from the official 300-question manual. Download it and study it alongside the simulator.'},
+  lnkManual:{es:'Manual CCSE 2026 (PDF)',en:'CCSE 2026 manual (PDF)'}, lnkManualS:{es:'Las 300 preguntas oficiales',en:'The 300 official questions'},
+  lnkPrep:{es:'Prueba modelo y guía',en:'Model test & guide'}, lnkPrepS:{es:'Examen de muestra, guía y glosario',en:'Sample test, guide and glossary'},
+  lnkSpec:{es:'Especificaciones de la prueba',en:'Test specifications'}, lnkSpecS:{es:'Cómo está armado el examen',en:'How the exam is built'},
+  lnkReg:{es:'Inscripción y fechas',en:'Registration & dates'}, lnkRegS:{es:'Centros y convocatorias',en:'Centres and sittings'},
   tNation:{es:'Nacionalidad española',en:'Spanish citizenship'}, tNationS:{es:'Ruta de 10 pasos y calculadora',en:'10-step route & calculator'},
   nationLink:{es:'El paso final: cuándo y cómo pedir la nacionalidad →',en:'The final step: when and how to apply for citizenship →'},
   natTitle:{es:'Ruta a la nacionalidad española',en:'Route to Spanish citizenship'},
@@ -1879,7 +1911,146 @@ function renderNation(){
   $('#nat-prog').style.width=pct+'%'; $('#nat-prog-t').textContent=`${done.length}/${NAT_STEPS.length} — ${pct}%`;
   $('#nat-cost').innerHTML = `<tr><th>${L({es:'Concepto',en:'Item'})}</th><th style="text-align:right">${L({es:'Valor',en:'Cost'})}</th></tr>`+NAT_COST.map(r=>`<tr><td>${L(r[0])}</td><td>${L(r[1])}</td></tr>`).join('') + `<tr><td colspan="2" class="small muted" style="font-weight:400;text-align:left">${L({es:'Para un colombiano lo normal es: tasa + CCSE ≈ 190 €, más apostillas y traducciones si hacen falta.',en:'For a Colombian: fee + CCSE ≈ €190, plus apostilles if needed.'})}</td></tr>`;
   renderAcc($('#nat-acc'),NAT_ACC);
+  if(!QZ) ccseHome(); else ccseShow();
 }
+
+/* =========================================================
+   SIMULADOR CCSE — preguntas de práctica (redacción propia, estilo CCSE).
+   Estructura oficial: T1=10, T2=3 (V/F), T3=2, T4=3, T5=7 · 45 min · aprueba 15/25
+   [tarea, pregunta, [opciones], índice correcto]
+   ========================================================= */
+const CCSE_TASKS = {1:{n:{es:'Gobierno, legislación y participación',en:'Government, law & participation'},k:10},2:{n:{es:'Derechos y deberes (V/F)',en:'Rights & duties (T/F)'},k:3},3:{n:{es:'Territorio y geografía',en:'Territory & geography'},k:2},4:{n:{es:'Cultura e historia',en:'Culture & history'},k:3},5:{n:{es:'Sociedad y trámites',en:'Society & procedures'},k:7}};
+const VF=['Verdadero','Falso'];
+const CCSE_Q = [
+ [1,'¿Cuál es la forma política del Estado español?',['Una república federal','Una monarquía parlamentaria','Una monarquía absoluta'],1],
+ [1,'¿En qué año se aprobó la Constitución española vigente?',['1975','1978','1986'],1],
+ [1,'¿Quién es el jefe del Estado en España?',['El presidente del Gobierno','El presidente del Congreso','El Rey'],2],
+ [1,'¿Qué cámaras forman las Cortes Generales?',['El Congreso de los Diputados y el Senado','El Senado y el Tribunal Supremo','El Congreso y el Consejo de Estado'],0],
+ [1,'¿Qué cámara otorga su confianza al candidato a presidente del Gobierno?',['El Senado','El Congreso de los Diputados','El Tribunal Constitucional'],1],
+ [1,'¿Quién nombra formalmente al presidente del Gobierno?',['El Rey','El Senado','El Defensor del Pueblo'],0],
+ [1,'¿Cada cuántos años se celebran, como norma general, las elecciones generales?',['Cada 3 años','Cada 4 años','Cada 6 años'],1],
+ [1,'¿Qué institución defiende los derechos de los ciudadanos frente a la Administración?',['El Tribunal de Cuentas','El Defensor del Pueblo','El Consejo de Estado'],1],
+ [1,'¿Qué órgano interpreta la Constitución?',['El Tribunal Constitucional','El Tribunal Supremo','Las Cortes Generales'],0],
+ [1,'¿Quién ejerce el poder legislativo?',['El Gobierno','Los jueces','Las Cortes Generales'],2],
+ [1,'¿Quién ejerce el poder ejecutivo?',['El Gobierno','El Senado','El Tribunal Supremo'],0],
+ [1,'¿Quién ejerce el poder judicial?',['Los ministros','Los jueces y magistrados','Los diputados'],1],
+ [1,'¿Cuál es el órgano de gobierno de los jueces?',['El Consejo General del Poder Judicial','El Ministerio del Interior','El Defensor del Pueblo'],0],
+ [1,'¿Cuántos diputados tiene el Congreso?',['300','350','400'],1],
+ [1,'¿A partir de qué edad se puede votar en España?',['16 años','18 años','21 años'],1],
+ [1,'¿Qué institución fiscaliza las cuentas y la gestión económica del Estado?',['El Tribunal de Cuentas','El Banco de España','El Senado'],0],
+ [1,'¿Desde qué año forma parte España de la Unión Europea (entonces Comunidades Europeas)?',['1978','1986','1992'],1],
+ [1,'¿De qué colores es la bandera de España?',['Rojo y amarillo','Rojo y blanco','Amarillo y azul'],0],
+ [1,'¿Cómo se llama el himno nacional de España?',['Himno de la Alegría','Marcha Real','Himno de Riego'],1],
+ [1,'¿En qué elecciones pueden votar algunos extranjeros residentes, como los colombianos, gracias a acuerdos de reciprocidad?',['Generales','Autonómicas','Municipales'],2],
+ [1,'¿Dónde tienen su sede el Congreso y el Senado?',['En Madrid','En Toledo','En Sevilla'],0],
+ [1,'¿Cuál es la moneda de España?',['La peseta','El euro','El dólar'],1],
+ [2,'La Constitución española garantiza la libertad religiosa.',VF,0],
+ [2,'En España está vigente la pena de muerte.',VF,1],
+ [2,'Los españoles son iguales ante la ley, sin discriminación por nacimiento, raza, sexo o religión.',VF,0],
+ [2,'Todos los españoles tienen el deber de trabajar y el derecho al trabajo.',VF,0],
+ [2,'La enseñanza básica es obligatoria y gratuita.',VF,0],
+ [2,'El domicilio es inviolable: nadie puede entrar sin permiso del titular o resolución judicial, salvo delito flagrante.',VF,0],
+ [2,'El servicio militar es obligatorio actualmente en España.',VF,1],
+ [2,'Se reconoce el derecho de reunión pacífica y sin armas.',VF,0],
+ [2,'Una persona detenida puede permanecer sin límite de tiempo antes de pasar a disposición judicial.',VF,1],
+ [2,'Todos tienen el deber de contribuir al sostenimiento de los gastos públicos.',VF,0],
+ [2,'La Constitución permite la censura previa de libros y periódicos.',VF,1],
+ [2,'El castellano es la lengua oficial del Estado y todos los españoles tienen el deber de conocerla.',VF,0],
+ [3,'¿Cuántas comunidades autónomas tiene España?',['15','17','19'],1],
+ [3,'¿Cuáles son las dos ciudades autónomas de España?',['Ceuta y Melilla','Toledo y Segovia','Cádiz y Málaga'],0],
+ [3,'¿Cuántas provincias tiene España?',['17','50','52'],1],
+ [3,'¿Cuál es el pico más alto de España?',['El Mulhacén','El Aneto','El Teide'],2],
+ [3,'¿Qué islas españolas están en el mar Mediterráneo?',['Las Canarias','Las Baleares','Las Azores'],1],
+ [3,'¿Qué río pasa por la ciudad de Madrid?',['El Manzanares','El Ebro','El Guadalquivir'],0],
+ [3,'¿Cuál es el río más largo de la península ibérica?',['El Duero','El Ebro','El Tajo'],2],
+ [3,'¿Qué cordillera separa España de Francia?',['Los Pirineos','Sierra Nevada','Los Picos de Europa'],0],
+ [3,'¿Con qué país limita España por el oeste?',['Francia','Portugal','Andorra'],1],
+ [3,'¿Cuál es la capital de Andalucía?',['Málaga','Granada','Sevilla'],2],
+ [3,'¿Qué lenguas son cooficiales en algunas comunidades autónomas?',['Catalán, gallego y euskera','Portugués, francés e inglés','Latín, griego y árabe'],0],
+ [4,'¿Quién escribió "Don Quijote de la Mancha"?',['Lope de Vega','Miguel de Cervantes','Federico García Lorca'],1],
+ [4,'¿Quién pintó "Las Meninas"?',['Diego Velázquez','Francisco de Goya','El Greco'],0],
+ [4,'¿Quién pintó el "Guernica"?',['Salvador Dalí','Joan Miró','Pablo Picasso'],2],
+ [4,'¿En qué año llegó Cristóbal Colón a América?',['1492','1512','1588'],0],
+ [4,'¿Qué arquitecto diseñó la Sagrada Familia de Barcelona?',['Santiago Calatrava','Antoni Gaudí','Rafael Moneo'],1],
+ [4,'¿En qué ciudad está la Alhambra?',['Córdoba','Sevilla','Granada'],2],
+ [4,'¿Qué fiesta se celebra en Pamplona en julio?',['Las Fallas','San Fermín','La Tomatina'],1],
+ [4,'¿En qué ciudad se celebran las Fallas?',['Valencia','Bilbao','Zaragoza'],0],
+ [4,'¿En qué año se celebraron los Juegos Olímpicos de Barcelona?',['1982','1992','2002'],1],
+ [4,'¿Qué escritor español recibió el Premio Nobel de Literatura en 1956?',['Juan Ramón Jiménez','Antonio Machado','Miguel de Unamuno'],0],
+ [4,'¿En qué año murió el dictador Francisco Franco, lo que abrió paso a la Transición?',['1969','1975','1982'],1],
+ [4,'¿Qué baile tradicional es típico de Andalucía?',['La jota','La muñeira','El flamenco'],2],
+ [5,'¿Dónde se inscribe una persona en el padrón municipal?',['En el Ayuntamiento','En la Delegación de Hacienda','En el consulado'],0],
+ [5,'¿Cuál es el número de teléfono único de emergencias en España?',['091','112','010'],1],
+ [5,'¿Cómo se llama el documento de identidad de los ciudadanos españoles?',['El NIE','El DNI','La TIE'],1],
+ [5,'Para trabajar legalmente, el trabajador debe estar dado de alta en…',['La Seguridad Social','El padrón','Correos'],0],
+ [5,'¿Qué organismo expide el permiso de conducir?',['La Dirección General de Tráfico (DGT)','El Ayuntamiento','La Policía Municipal'],0],
+ [5,'El IVA es un impuesto que se paga…',['Por los ingresos del trabajo','Al comprar bienes y servicios','Por tener casa propia'],1],
+ [5,'¿Dónde se pide normalmente la tarjeta sanitaria?',['En el centro de salud','En la comisaría','En el banco'],0],
+ [5,'¿Qué día se celebra el Día de la Constitución?',['12 de octubre','6 de diciembre','1 de mayo'],1],
+ [5,'¿Qué día es la Fiesta Nacional de España?',['12 de octubre','25 de julio','6 de enero'],0],
+ [5,'¿Entre qué edades es obligatoria la enseñanza en España?',['De 3 a 12 años','De 6 a 16 años','De 6 a 18 años'],1],
+ [5,'¿Ante qué organismo se presenta la declaración de la renta (IRPF)?',['La Agencia Tributaria','La Seguridad Social','El Registro Civil'],0],
+ [5,'¿Qué se celebra el 6 de enero?',['El Día de Reyes','El Año Nuevo','La Navidad'],0],
+ [5,'En Nochevieja es tradición comer, con las campanadas…',['Doce uvas','Doce aceitunas','Turrón'],0],
+ [5,'¿Qué organismo gestiona las prestaciones por desempleo (el paro)?',['El SEPE','La DGT','El INE'],0],
+ [5,'Para denunciar un robo hay que acudir a…',['Una comisaría de policía','Un centro de salud','Una oficina de Correos'],0],
+ [5,'El contrato que firman un inquilino y el propietario de una vivienda se llama…',['Contrato de arrendamiento','Contrato de trabajo','Escritura de compraventa'],0],
+ [5,'¿Dónde se pide cita para renovar la tarjeta de residencia (TIE) y sus huellas?',['En la Policía Nacional','En el Ayuntamiento','En el centro de salud'],0]
+];
+let QZ=null, qzTimer=null;
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function ccseHome(){
+  clearInterval(qzTimer); QZ=null;
+  const best=store.get('ccseBest',null);
+  $('#ccse-box').innerHTML = `${best!==null?`<div class="notice" style="margin-bottom:10px">🏆 ${L({es:'Tu mejor resultado',en:'Your best score'})}: <b>${best}/25</b> ${best>=15?'✅':''}</div>`:''}
+   <button class="btn red block" onclick="ccseStart('exam')">⏱️ ${L({es:'Examen completo: 25 preguntas, 45 min',en:'Full exam: 25 questions, 45 min'})}</button>
+   <p class="small muted mt">${L({es:'O practica por tarea (te muestra la respuesta al momento):',en:'Or practise by task (instant feedback):'})}</p>
+   <div class="ychips mt">${Object.entries(CCSE_TASKS).map(([k,t])=>`<button class="chip" onclick="ccseStart('task',${k})">${k}. ${esc(L(t.n))} · ${CCSE_Q.filter(q=>q[0]==k).length}</button>`).join('')}</div>
+   <p class="small muted mt">${L({es:`Banco de práctica: ${CCSE_Q.length} preguntas. No son las preguntas oficiales: para eso estudia el manual del Instituto Cervantes.`,en:`Practice bank: ${CCSE_Q.length} questions. Not the official ones — study the Instituto Cervantes manual for those.`})}</p>`;
+}
+function ccseStart(mode,task){
+  let qs;
+  if(mode==='exam'){ qs=[]; for(const k in CCSE_TASKS) qs.push(...shuffle(CCSE_Q.filter(q=>q[0]==k)).slice(0,CCSE_TASKS[k].k)); }
+  else qs=shuffle(CCSE_Q.filter(q=>q[0]==task));
+  QZ={mode,task,qs,i:0,ans:[],end:mode==='exam'?Date.now()+45*60000:null};
+  clearInterval(qzTimer); if(QZ.end) qzTimer=setInterval(()=>{ const el=$('#qz-time'); if(!QZ){clearInterval(qzTimer);return;} const r=QZ.end-Date.now(); if(r<=0){ clearInterval(qzTimer); ccseFinish(); return;} if(el) el.textContent=`${Math.floor(r/60000)}:${String(Math.floor(r/1000)%60).padStart(2,'0')}`; },1000);
+  ccseShow(); document.getElementById('ccse-card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function ccseShow(){
+  const q=QZ.qs[QZ.i], a=QZ.ans[QZ.i], fb=QZ.mode==='task' && a!==undefined;
+  $('#ccse-box').innerHTML = `<div class="qz-top"><span class="pill red">${L({es:'Tarea',en:'Task'})} ${q[0]} · ${esc(L(CCSE_TASKS[q[0]].n))}</span>${QZ.end?`<span class="qz-timer">⏱️ <span id="qz-time">45:00</span></span>`:''}</div>
+   <div class="progress mt"><i style="width:${Math.round(QZ.i/QZ.qs.length*100)}%"></i></div>
+   <p class="small muted mt">${L({es:'Pregunta',en:'Question'})} ${QZ.i+1}/${QZ.qs.length}</p>
+   <div class="qz-q">${esc(q[1])}</div>
+   ${q[2].map((o,j)=>`<button class="qz-opt ${fb?(j===q[3]?'ok':(j===a?'bad':'')):(a===j?'sel':'')}" ${fb?'disabled':''} onclick="ccseAnswer(${j})">${'abc'[j]}) ${esc(o)}</button>`).join('')}
+   ${fb?`<div class="notice mt" style="${a===q[3]?'background:#E3F5EA;border-color:#B9E5C8':''}">${a===q[3]?'✅ '+L({es:'¡Correcto!',en:'Correct!'}):'❌ '+L({es:'La respuesta correcta es',en:'Correct answer'})+': <b>'+esc(q[2][q[3]])+'</b>'}</div>`:''}
+   <div class="row mt" style="justify-content:space-between;flex-wrap:wrap">
+     <button class="btn sm ghost" onclick="ccseHome()">✕ ${L({es:'Salir',en:'Exit'})}</button>
+     <div class="row" style="gap:6px">${QZ.i>0&&QZ.mode==='exam'?`<button class="btn sm ghost" onclick="QZ.i--;ccseShow()">←</button>`:''}
+     ${QZ.i<QZ.qs.length-1?`<button class="btn sm" ${QZ.mode==='task'&&a===undefined?'disabled':''} onclick="QZ.i++;ccseShow()">${L({es:'Siguiente',en:'Next'})} →</button>`:`<button class="btn sm red" onclick="ccseFinish()">${L({es:'Terminar',en:'Finish'})} ✓</button>`}</div>
+   </div>`;
+  const r=QZ.end&&QZ.end-Date.now(); if(r&&$('#qz-time')) $('#qz-time').textContent=`${Math.floor(r/60000)}:${String(Math.floor(r/1000)%60).padStart(2,'0')}`;
+}
+function ccseAnswer(j){
+  if(QZ.mode==='task' && QZ.ans[QZ.i]!==undefined) return;
+  QZ.ans[QZ.i]=j;
+  if(QZ.mode==='exam' && QZ.i<QZ.qs.length-1){ QZ.i++; }
+  ccseShow();
+}
+function ccseFinish(){
+  clearInterval(qzTimer); if(!QZ) return;
+  const ok=QZ.qs.filter((q,i)=>QZ.ans[i]===q[3]).length, n=QZ.qs.length;
+  const pass = QZ.mode==='exam' ? ok>=15 : ok/n>=0.6;
+  if(QZ.mode==='exam'){ const b=store.get('ccseBest',null); if(b===null||ok>b) store.set('ccseBest',ok); }
+  const wrong=QZ.qs.map((q,i)=>[q,QZ.ans[i]]).filter(([q,a])=>a!==q[3]);
+  const byT={}; QZ.qs.forEach((q,i)=>{ byT[q[0]]=byT[q[0]]||[0,0]; byT[q[0]][1]++; if(QZ.ans[i]===q[3]) byT[q[0]][0]++; });
+  $('#ccse-box').innerHTML = `<div class="goal" style="background:${pass?'var(--ok)':'var(--red)'}"><b>${ok}/${n}</b><span>${pass?L({es:'¡APTO! Así se aprueba el CCSE 🎉',en:'PASS! 🎉'}):L({es:'NO APTO todavía — ¡sigue practicando!',en:'Not yet — keep practising!'})}</span></div>
+   ${QZ.mode==='exam'?`<div class="mt">${Object.entries(byT).map(([k,v])=>`<div class="arr"><span>${L({es:'Tarea',en:'Task'})} ${k} · ${esc(L(CCSE_TASKS[k].n))}</span><b>${v[0]}/${v[1]}</b></div>`).join('')}</div>`:''}
+   ${wrong.length?`<h3 class="mt2">🔁 ${L({es:'Repasa tus errores',en:'Review your mistakes'})}</h3>`+wrong.map(([q,a])=>`<div class="rstep" style="margin-top:8px"><b class="small">${esc(q[1])}</b><div class="small mt">✅ ${esc(q[2][q[3]])}${a!==undefined?`<br><span style="color:var(--red-dark)">❌ ${esc(q[2][a])}</span>`:`<br><span class="muted">${L({es:'Sin responder',en:'Unanswered'})}</span>`}</div></div>`).join(''):''}
+   <div class="grid g2 keep mt" style="grid-template-columns:1fr 1fr"><button class="btn red" onclick="ccseStart('${QZ.mode}',${QZ.task||0})">↻ ${L({es:'Otra vez',en:'Again'})}</button><button class="btn ghost" onclick="ccseHome()">${L({es:'Menú',en:'Menu'})}</button></div>`;
+  QZ=null;
+}
+
 function toggleNat(i){ let d=store.get('natDone',[]); d=d.includes(i)?d.filter(x=>x!==i):[...d,i]; store.set('natDone',d); renderNation(); }
 function calcNation(){
   const out=$('#nat-out'), v=$('#nat-date').value; store.set('natDate',v);
