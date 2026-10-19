@@ -252,6 +252,23 @@ details.acc ol li{margin:5px 0}
 .cbar span{position:absolute;top:-18px;left:0;right:0;font-size:.7rem;font-weight:700}
 .cl.on .cbar{background:var(--red)}
 .cl small{font-size:.66rem;color:var(--muted)}
+/* Nacionalidad */
+.nat-hero{background:linear-gradient(135deg,#AA151B 0%,#AA151B 30%,#F1BF00 30%,#F1BF00 70%,#AA151B 70%);border-radius:var(--r);padding:4px}
+.nat-hero .in{background:#fff;border-radius:11px;padding:16px}
+.road{position:relative;padding-left:30px}
+.road::before{content:"";position:absolute;left:13px;top:8px;bottom:8px;width:6px;border-radius:3px;background:repeating-linear-gradient(#3A3A3F 0 14px,#fff 14px 22px,#3A3A3F 22px 36px);opacity:.8}
+.rstep{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 12px 12px 14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.rstep .rn{position:absolute;left:-31px;top:10px;width:32px;height:32px;border-radius:50%;color:#fff;font-weight:800;display:grid;place-items:center;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.rstep.done{background:#F2FBF5;border-color:#B9E5C8}
+.rstep.done .rn{background:var(--ok)!important}
+.rstep .rh{display:flex;gap:8px;align-items:flex-start;justify-content:space-between}
+.rstep .rh b{font-size:1.02rem}
+.rstep input[type=checkbox]{width:22px;height:22px;flex:none;accent-color:var(--ok)}
+.goal{background:var(--red);color:#fff;border-radius:var(--r);padding:18px;text-align:center}
+.goal b{font-family:'Barlow Condensed';font-size:1.8rem;text-transform:uppercase;display:block}
+.ychips{display:flex;flex-wrap:wrap;gap:8px}
+.ychips .chip{white-space:normal;text-align:left;max-width:100%;line-height:1.25}
+.nat-hero .stat b{font-size:1.35rem;white-space:nowrap}
 
 /* Panel (sub pages) */
 .back{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink);background:none;border:0;margin-bottom:10px;font-size:.95rem}
@@ -314,6 +331,7 @@ footer.foot b{color:var(--ink)}
   <div class="grid g3 mt">
     <button class="tile hot" onclick="go('places')"><span class="em">🏛️</span><b data-t="tPlaces">Lugares de interés</b><small data-t="tPlacesS">Qué conocer, gratis y de pago</small></button>
     <button class="tile hot" onclick="go('papers')"><span class="em">📄</span><b data-t="tPapers">Papeles</b><small data-t="tPapersS">Padrón, NIE, TIE, arraigo</small></button>
+    <button class="tile hot" onclick="go('nation')"><span class="em">🇪🇸</span><b data-t="tNation">Nacionalidad española</b><small data-t="tNationS">Ruta de 10 pasos y calculadora</small></button>
     <button class="tile" onclick="go('map')"><span class="em">🗺️</span><b data-t="tMap">Mapa</b><small data-t="tMapS">Ayuda, hospitales, barrios latinos</small></button>
     <button class="tile" onclick="go('transit')"><span class="em">🚇</span><b data-t="tTransit">Metro y bus</b><small data-t="tTransitS">Rutas, líneas y tarifas 2026</small></button>
     <button class="tile" onclick="go('phrases')"><span class="em">💬</span><b data-t="tPhrases">Español de España</b><small data-t="tPhrasesS">Conversaciones con audio</small></button>
@@ -452,6 +470,45 @@ footer.foot b{color:var(--ink)}
   <div class="ladder" id="papers-steps"></div>
   <div class="notice red mt" data-t="citaWarn">🚫 <b>Las citas de extranjería son GRATIS.</b> Si alguien te vende una cita, te pide dinero por "agilizar" o promete papeles rápidos, es estafa. Pide cita solo en la sede oficial o con una ONG.</div>
   <div id="papers-acc" class="mt2"></div>
+  <button class="tile hot mt" style="width:100%" onclick="go('nation')"><span class="em">🇪🇸</span><b data-t="tNation">Nacionalidad española</b><small data-t="nationLink">El paso final: cuándo y cómo pedir la nacionalidad →</small></button>
+</section>
+
+<!-- ================= NACIONALIDAD ================= -->
+<section class="view" id="v-nation">
+  <button class="back" onclick="go('home')">← <span data-t="back">Volver</span></button>
+  <div class="nat-hero"><div class="in">
+    <h2 data-t="natTitle">Ruta a la nacionalidad española</h2>
+    <p class="small muted mt" data-t="natSub">Por residencia, de inicio a fin. Para los colombianos y casi todos los latinoamericanos el plazo es de solo 2 años de residencia legal.</p>
+    <div class="grid g3 keep mt" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat"><b>2</b><small data-t="natSt1">años (iberoamericanos)</small></div>
+      <div class="stat"><b>~104 €</b><small data-t="natSt2">tasa del Ministerio</small></div>
+      <div class="stat"><b>180</b><small data-t="natSt3">días para jurar</small></div>
+    </div>
+  </div></div>
+
+  <div class="card mt">
+    <h3 data-t="calcT">🧮 ¿Desde cuándo puedo pedirla?</h3>
+    <p class="small muted" data-t="calcS">Elige tu caso y la fecha en que empezó tu residencia LEGAL (la de tu primera autorización o TIE). El tiempo sin papeles no cuenta.</p>
+    <label class="f" data-t="calcCase">Mi caso</label>
+    <div class="ychips" id="nat-cases"></div>
+    <label class="f" data-t="calcDate">Inicio de mi residencia legal</label>
+    <input type="date" id="nat-date">
+    <div id="nat-out" class="mt"></div>
+  </div>
+
+  <div class="sec-head"><div><h2 data-t="roadT">Los 10 pasos</h2><p data-t="roadS">Marca cada paso cuando lo completes. Se guarda en tu celular.</p></div></div>
+  <div class="progress"><i id="nat-prog"></i></div>
+  <p class="small muted mt" id="nat-prog-t"></p>
+  <div class="road mt" id="nat-road"></div>
+  <div class="goal"><b data-t="goalT">Meta: ¡ya eres español/a!</b><span class="small" data-t="goalS">Y si eres colombiano, sigues siendo colombiano: no pierdes tu nacionalidad.</span></div>
+
+  <div class="sec-head"><div><h2 data-t="costT">Cuánto cuesta</h2><p data-t="costS">Valores orientativos de 2026.</p></div></div>
+  <div class="card"><table class="fares" id="nat-cost"></table></div>
+
+  <div class="sec-head"><div><h2 data-t="natFaqT">Lo que debes saber</h2></div></div>
+  <div id="nat-acc"></div>
+  <div class="notice red mt" data-t="natScam">🚫 Nadie puede "acelerar" tu expediente pagando. Desconfía de gestores que prometen la nacionalidad en meses. Puedes presentarla tú mismo en la sede electrónica del Ministerio de Justicia.</div>
+  <p class="small muted mt" data-t="natDisc">Resumen orientativo, no es asesoría legal. El proceso puede variar según tu caso personal: confirma en sede.mjusticia.gob.es antes de pagar o presentar.</p>
 </section>
 
 <!-- ================= SUBPÁGINAS ================= -->
@@ -633,6 +690,20 @@ const T = {
   stTotal:{es:'lugares',en:'places'}, stFree:{es:'gratis',en:'free'}, stMine:{es:'quiero ir / ya fui',en:'want / visited'},
   nearMe:{es:'📍 Cerca',en:'📍 Near me'}, itinT:{es:'Itinerarios listos',en:'Ready-made itineraries'}, itinS:{es:'Recorridos de un día. Toca para verlos dibujados en el mapa.',en:'One-day routes. Tap to see them on the map.'},
   nPlaces:{es:'Lugares',en:'Places'},
+  tNation:{es:'Nacionalidad española',en:'Spanish citizenship'}, tNationS:{es:'Ruta de 10 pasos y calculadora',en:'10-step route & calculator'},
+  nationLink:{es:'El paso final: cuándo y cómo pedir la nacionalidad →',en:'The final step: when and how to apply for citizenship →'},
+  natTitle:{es:'Ruta a la nacionalidad española',en:'Route to Spanish citizenship'},
+  natSub:{es:'Por residencia, de inicio a fin. Para los colombianos y casi todos los latinoamericanos el plazo es de solo 2 años de residencia legal.',en:'By residence, start to finish. For Colombians and most Latin Americans it takes only 2 years of legal residence.'},
+  natSt1:{es:'años (iberoamericanos)',en:'years (Ibero-Americans)'}, natSt2:{es:'tasa del Ministerio',en:'Ministry fee'}, natSt3:{es:'días para jurar',en:'days to take the oath'},
+  calcT:{es:'🧮 ¿Desde cuándo puedo pedirla?',en:'🧮 When can I apply?'},
+  calcS:{es:'Elige tu caso y la fecha en que empezó tu residencia LEGAL (la de tu primera autorización o TIE). El tiempo sin papeles no cuenta.',en:'Pick your case and the date your LEGAL residence began (your first permit or TIE). Time without papers does not count.'},
+  calcCase:{es:'Mi caso',en:'My case'}, calcDate:{es:'Inicio de mi residencia legal',en:'Start of my legal residence'},
+  roadT:{es:'Los 10 pasos',en:'The 10 steps'}, roadS:{es:'Marca cada paso cuando lo completes. Se guarda en tu celular.',en:'Tick each step as you complete it. Saved on your phone.'},
+  goalT:{es:'Meta: ¡ya eres español/a!',en:'Goal: you are Spanish!'}, goalS:{es:'Y si eres colombiano, sigues siendo colombiano: no pierdes tu nacionalidad.',en:'And if you are Colombian, you stay Colombian too.'},
+  costT:{es:'Cuánto cuesta',en:'What it costs'}, costS:{es:'Valores orientativos de 2026.',en:'Approximate 2026 figures.'},
+  natFaqT:{es:'Lo que debes saber',en:'What you need to know'},
+  natScam:{es:'🚫 Nadie puede "acelerar" tu expediente pagando. Desconfía de gestores que prometen la nacionalidad en meses. Puedes presentarla tú mismo en la sede electrónica del Ministerio de Justicia.',en:'🚫 Nobody can speed up your file for money. Beware of agents promising citizenship in months. You can apply yourself on the Ministry of Justice e-office.'},
+  natDisc:{es:'Resumen orientativo, no es asesoría legal. El proceso puede variar según tu caso personal: confirma en sede.mjusticia.gob.es antes de pagar o presentar.',en:'Guidance only, not legal advice. Your case may differ: confirm on sede.mjusticia.gob.es before paying or applying.'},
   tPapers:{es:'Papeles',en:'Paperwork'}, tPapersS:{es:'Padrón, NIE, TIE, arraigo',en:'Padrón, NIE, TIE, residency'},
   papersSub:{es:'Los trámites que abren todas las puertas en España, en orden.',en:'The procedures that open every door in Spain, in order.'},
   citaWarn:{es:'🚫 <b>Las citas de extranjería son GRATIS.</b> Si alguien te vende una cita, te pide dinero por "agilizar" o promete papeles rápidos, es estafa. Pide cita solo en la sede oficial o con una ONG.',en:'🚫 <b>Immigration appointments are FREE.</b> Anyone selling an appointment or promising fast papers is a scammer. Book only on the official site or through an NGO.'},
@@ -1735,11 +1806,105 @@ function renderHols(){
   $('#hols').innerHTML = up.map(h=>`<div class="arr"><span>${esc(L(h[1]))}</span><b style="font-weight:600;flex:none">${tz(new Date(h[0]+'T12:00:00Z'),'Europe/Madrid',{weekday:'short',day:'numeric',month:'short',year:'numeric'})}</b></div>`).join('') + `<p class="small muted mt">${L({es:'2026: calendario oficial del Ayuntamiento de Madrid. 2027: festivos nacionales y de la Comunidad (Nager.Date); los locales de la ciudad se publican más adelante.',en:'2026: official Madrid city calendar. 2027: national and regional holidays (Nager.Date); city holidays are published later.'})}</p>`;
 }
 
+
+/* =========================================================
+   NACIONALIDAD ESPAÑOLA POR RESIDENCIA (verificado oct. 2026)
+   ========================================================= */
+const NAT_CASES = [
+ {id:'ibero',y:2,ic:'🌎',n:{es:'Iberoamericano (Colombia y casi toda Latinoamérica)',en:'Ibero-American (Colombia & most of Latin America)'}},
+ {id:'marry',y:1,ic:'💍',n:{es:'Casado/a con español/a (1 año de matrimonio y convivencia)',en:'Married to a Spaniard (1 year)'}},
+ {id:'born',y:1,ic:'👶',n:{es:'Nacido/a en España',en:'Born in Spain'}},
+ {id:'refug',y:5,ic:'🛡️',n:{es:'Refugiado/a reconocido/a',en:'Recognised refugee'}},
+ {id:'gen',y:10,ic:'🌍',n:{es:'Regla general (otros países)',en:'General rule (other countries)'}}
+];
+const NAT_STEPS = [
+ ['📅','#EB0A1E',{es:'Verifica si cumples el plazo',en:'Check you meet the time requirement'},
+  {es:'Necesitas residencia <b>legal, continuada e inmediatamente anterior</b> a la solicitud. Plazos: <b>10 años</b> general · <b>5</b> refugiados · <b>2</b> iberoamericanos (Colombia incluida), Andorra, Filipinas, Guinea Ecuatorial, Portugal y sefardíes · <b>1 año</b> casos especiales (casado con español, nacido en España…). Usa la calculadora de arriba.',
+   en:'You need <b>legal, continuous residence immediately before</b> applying: 10 years general, 5 refugees, <b>2 Ibero-Americans</b> (incl. Colombia), 1 year special cases. Use the calculator above.'}],
+ ['📁','#F2A900',{es:'Reúne la documentación',en:'Gather your documents'},
+  {es:'TIE en vigor y pasaporte · <b>registro civil de nacimiento</b> apostillado · <b>certificado de antecedentes penales</b> de Colombia (y de otros países donde viviste) apostillado y reciente · certificado de empadronamiento histórico · documentos de tu caso (matrimonio, libro de familia…). Si algo no está en español, traducción jurada.',
+   en:'Valid TIE and passport, apostilled birth certificate, recent apostilled criminal record from Colombia, historical padrón certificate, case documents. Sworn translation if not in Spanish.'}],
+ ['📝','#0067B1',{es:'Haz los exámenes si aplican',en:'Take the exams if required'},
+  {es:'<b>CCSE</b> (conocimientos constitucionales y socioculturales): normalmente sí, también para colombianos. <b>DELE A2</b> (idioma): solo si no eres de un país hispanohablante. Los colombianos y demás latinoamericanos de habla hispana están exentos.',
+   en:'<b>CCSE</b> civics test: usually yes, Colombians included. <b>DELE A2</b> language test: only for non-Spanish-speaking countries — Colombians are exempt.'}],
+ ['💳','#EB0A1E',{es:'Paga la tasa',en:'Pay the fee'},
+  {es:'Modelo <b>790, código 026</b>. Importe orientativo 2026: <b>unos 104 €</b> (se publica 104,05 €; confirma el valor exacto en el formulario oficial). Se paga en línea o en el banco.',
+   en:'Form <b>790, code 026</b>. Approx. 2026 fee: <b>about €104</b> (€104.05 published; confirm on the official form). Pay online or at a bank.'}],
+ ['💻','#F2A900',{es:'Presenta la solicitud',en:'Submit the application'},
+  {es:'Preferiblemente <b>en línea</b> en la sede electrónica del Ministerio de Justicia, con certificado digital, Cl@ve o a través de un representante (abogado o gestor colegiado).',
+   en:'Preferably <b>online</b> on the Ministry of Justice e-office with a digital certificate, Cl@ve or a registered representative.'}],
+ ['🔎','#0067B1',{es:'Guarda el resguardo y sigue el expediente',en:'Keep the receipt and track your file'},
+  {es:'Guarda el justificante con tu número de expediente. Consulta el estado en la sede y revisa las notificaciones con frecuencia.',
+   en:'Keep the receipt with your file number. Check status on the e-office and watch for notifications.'}],
+ ['📎','#EB0A1E',{es:'Aporta subsanaciones si te las piden',en:'Respond to requests'},
+  {es:'Si llega un requerimiento, responde <b>dentro del plazo</b> con la documentación correcta. Si no contestas, tu expediente se puede archivar.',
+   en:'If you get a request, answer <b>within the deadline</b>. Otherwise your file may be closed.'}],
+ ['⏳','#F2A900',{es:'Espera la resolución',en:'Wait for the decision'},
+  {es:'El plazo legal es de <b>1 año</b>, pero en la práctica suele tardar <b>entre 12 y 24 meses</b>. Puede ser favorable o denegatoria. Si pasa el año sin respuesta, se entiende denegada por silencio (puedes recurrir).',
+   en:'The legal deadline is <b>1 year</b>, but it often takes <b>12–24 months</b>. After a year without reply it counts as refused by silence (you can appeal).'}],
+ ['✋','#0067B1',{es:'Si es favorable: jura o promesa',en:'If granted: take the oath'},
+  {es:'Tienes <b>180 días</b> desde la notificación para jurar o prometer fidelidad al Rey y obediencia a la Constitución, ante el Registro Civil o un notario (con costo). Si se te pasa el plazo, pierdes la concesión. Los colombianos <b>no tienen que renunciar</b> a su nacionalidad.',
+   en:'You have <b>180 days</b> to take the oath at the Civil Registry or a notary. Miss it and the grant lapses. Colombians <b>do not renounce</b> their nationality.'}],
+ ['🪪','#EB0A1E',{es:'Inscripción y documentos españoles',en:'Registration and Spanish documents'},
+  {es:'Tras la inscripción en el Registro Civil, pide el <b>certificado literal de nacimiento</b> español, luego tu <b>DNI</b> en la Policía Nacional y después el <b>pasaporte español</b>.',
+   en:'After Civil Registry registration, get your Spanish birth certificate, then your <b>DNI</b> and <b>Spanish passport</b>.'}]
+];
+const NAT_COST = [
+ [{es:'Tasa de nacionalidad (790-026)',en:'Citizenship fee (790-026)'},'~104 €'],
+ [{es:'Examen CCSE (Instituto Cervantes)',en:'CCSE exam (Instituto Cervantes)'},'85 €'],
+ [{es:'DELE A2 — solo si no eres hispanohablante',en:'DELE A2 — only non-Spanish speakers'},'138 €'],
+ [{es:'Apostillas y certificados en Colombia',en:'Apostilles & certificates in Colombia'},{es:'Varía',en:'Varies'}],
+ [{es:'Jura ante notario (opcional; en el Registro Civil es gratis)',en:'Oath at a notary (optional; free at Civil Registry)'},'150–250 €'],
+ [{es:'Abogado o gestor (opcional)',en:'Lawyer or agent (optional)'},{es:'Opcional',en:'Optional'}]
+];
+const NAT_ACC = [
+ {t:{es:'🇨🇴 ¿Pierdo la nacionalidad colombiana?',en:'🇨🇴 Do I lose Colombian nationality?'},b:{es:'<p><b>No.</b> España y Colombia tienen un convenio de doble nacionalidad. Al jurar no tienes que renunciar a la nacionalidad colombiana y quedas con las dos. Lo mismo pasa con otros países iberoamericanos (en algunos casos hay que revisar el convenio de cada país).</p>',en:'<p><b>No.</b> Spain and Colombia have a dual nationality agreement; you keep both.</p>'}},
+ {t:{es:'⏱️ ¿Qué cuenta como residencia legal?',en:'⏱️ What counts as legal residence?'},b:{es:'<ul class="dots"><li>Cuenta desde que tienes autorización de residencia (por ejemplo, arraigo, trabajo, familiar de comunitario).</li><li>El tiempo como <b>turista o sin papeles NO cuenta</b>.</li><li>Los años como <b>estudiante</b> no se suman (la estancia por estudios no es residencia), salvo cambios futuros de la norma: consúltalo en tu caso.</li><li>Debe ser <b>continuada</b>: salidas largas de España pueden romper el plazo.</li><li>Tu residencia debe estar en vigor el día que presentas.</li></ul>',en:'<ul class="dots"><li>Counts from your first residence permit.</li><li>Tourist or undocumented time does NOT count; student stay is not residence.</li><li>Must be continuous and valid on the day you apply.</li></ul>'}},
+ {t:{es:'📝 Cómo es el examen CCSE',en:'📝 What is the CCSE like?'},b:{es:'<ul class="dots"><li>25 preguntas tipo test sobre la Constitución, el gobierno, la cultura y la sociedad española.</li><li>Apruebas con <b>15 aciertos</b> (60%). Los errores no restan.</li><li>Unos 45 minutos. Se hace casi todos los meses en centros del Instituto Cervantes.</li><li>Las preguntas salen de un manual oficial que puedes estudiar gratis en la web del Cervantes (examenes.cervantes.es).</li></ul>',en:'<ul class="dots"><li>25 multiple-choice questions; pass with 15.</li><li>~45 minutes, held most months.</li><li>Questions come from the free official manual at examenes.cervantes.es.</li></ul>'}},
+ {t:{es:'🙋 ¿Quién está exento del DELE?',en:'🙋 Who is exempt from DELE?'},b:{es:'<p>Los nacionales de países donde el español es idioma oficial: <b>Colombia</b>, Argentina, Bolivia, Chile, Costa Rica, Cuba, Ecuador, El Salvador, Guatemala, Guinea Ecuatorial, Honduras, México, Nicaragua, Panamá, Paraguay, Perú, Puerto Rico, República Dominicana, Uruguay y Venezuela. También los menores de 18 años. Los mayores de 70 y quienes estudiaron la ESO en España pueden pedir dispensa.</p>',en:'<p>Nationals of Spanish-speaking countries (Colombia included) and minors. Over-70s and ESO graduates in Spain can request a waiver.</p>'}},
+ {t:{es:'⚖️ Buena conducta',en:'⚖️ Good conduct'},b:{es:'<p>Además del tiempo, se pide <b>buena conducta cívica</b> y suficiente integración. Antecedentes penales en España o en tu país, o problemas con la policía, pueden hacer que te la nieguen. Si tienes alguna duda sobre tu historial, consulta antes con un abogado.</p>',en:'<p>Good civic conduct and integration are required. Criminal records can lead to refusal.</p>'}},
+ {t:{es:'👶 Hijos y menores',en:'👶 Children'},b:{es:'<ul class="dots"><li>Los hijos menores también pueden pedirla; la solicitud la presentan los padres o representantes.</li><li>Los nacidos en España de padres extranjeros pueden pedirla con <b>1 año</b> de residencia legal.</li><li>Los mayores de 14 años juran ellos mismos con asistencia de sus representantes.</li></ul>',en:'<ul class="dots"><li>Parents apply for minors; children born in Spain need only 1 year.</li></ul>'}},
+ {t:{es:'🔗 Webs oficiales',en:'🔗 Official sites'},b:{es:'<ul class="dots"><li><a href="https://sede.mjusticia.gob.es" target="_blank" rel="noopener">sede.mjusticia.gob.es</a> — solicitud, tasa y estado del expediente</li><li><a href="https://examenes.cervantes.es" target="_blank" rel="noopener">examenes.cervantes.es</a> — inscripción y manual del CCSE y DELE</li><li><a href="https://www.mjusticia.gob.es" target="_blank" rel="noopener">mjusticia.gob.es</a> — información de nacionalidad</li><li><a href="https://www.cancilleria.gov.co" target="_blank" rel="noopener">cancilleria.gov.co</a> — apostilla de documentos colombianos en línea</li></ul>',en:'<ul class="dots"><li>sede.mjusticia.gob.es — application & tracking</li><li>examenes.cervantes.es — CCSE/DELE</li><li>cancilleria.gov.co — apostille Colombian documents</li></ul>'}}
+];
+let natCase = store.get('natCase','ibero');
+function renderNation(){
+  const done = store.get('natDone',[]);
+  $('#nat-cases').innerHTML = NAT_CASES.map(c=>`<button class="chip ${natCase===c.id?'on':''}" onclick="natCase='${c.id}';store.set('natCase','${c.id}');renderNation()">${c.ic} ${esc(L(c.n))} · ${c.y} ${L(c.y===1?{es:'año',en:'year'}:{es:'años',en:'years'})}</button>`).join('');
+  const di=$('#nat-date'); if(!di.value) di.value = store.get('natDate','');
+  calcNation();
+  $('#nat-road').innerHTML = NAT_STEPS.map((s,i)=>`<div class="rstep ${done.includes(i)?'done':''}"><span class="rn" style="background:${s[1]}">${i+1}</span>
+    <div class="rh"><b>${s[0]} ${esc(L(s[2]))}</b><input type="checkbox" ${done.includes(i)?'checked':''} onchange="toggleNat(${i})" aria-label="${esc(L(s[2]))}"></div>
+    <p class="small mt">${L(s[3])}</p></div>`).join('');
+  const pct=Math.round(done.length/NAT_STEPS.length*100);
+  $('#nat-prog').style.width=pct+'%'; $('#nat-prog-t').textContent=`${done.length}/${NAT_STEPS.length} — ${pct}%`;
+  $('#nat-cost').innerHTML = `<tr><th>${L({es:'Concepto',en:'Item'})}</th><th style="text-align:right">${L({es:'Valor',en:'Cost'})}</th></tr>`+NAT_COST.map(r=>`<tr><td>${L(r[0])}</td><td>${L(r[1])}</td></tr>`).join('') + `<tr><td colspan="2" class="small muted" style="font-weight:400;text-align:left">${L({es:'Para un colombiano lo normal es: tasa + CCSE ≈ 190 €, más apostillas y traducciones si hacen falta.',en:'For a Colombian: fee + CCSE ≈ €190, plus apostilles if needed.'})}</td></tr>`;
+  renderAcc($('#nat-acc'),NAT_ACC);
+}
+function toggleNat(i){ let d=store.get('natDone',[]); d=d.includes(i)?d.filter(x=>x!==i):[...d,i]; store.set('natDone',d); renderNation(); }
+function calcNation(){
+  const out=$('#nat-out'), v=$('#nat-date').value; store.set('natDate',v);
+  const c=NAT_CASES.find(x=>x.id===natCase)||NAT_CASES[0];
+  if(!v){ out.innerHTML=`<p class="small muted">${L({es:'Elige la fecha para calcular.',en:'Pick a date to calculate.'})}</p>`; return; }
+  const st=new Date(v+'T12:00:00Z'); const el=new Date(st); el.setUTCFullYear(el.getUTCFullYear()+c.y);
+  const today=new Date(new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid'}).format(new Date())+'T12:00:00Z');
+  const days=Math.round((el-today)/864e5);
+  const fmtD=d=>tz(d,'UTC',{day:'numeric',month:'long',year:'numeric'});
+  if(st>today){ out.innerHTML=`<div class="notice">${L({es:'Esa fecha es futura. Pon la fecha en que empezó tu residencia legal.',en:'That date is in the future.'})}</div>`; return; }
+  const total=c.y*365, pct=Math.max(0,Math.min(100,Math.round((total-Math.max(days,0))/total*100)));
+  out.innerHTML = `<div class="progress"><i style="width:${pct}%"></i></div>
+   <div class="grid g2 keep mt" style="grid-template-columns:1fr 1fr"><div class="stat"><b style="font-size:1.15rem">${fmtD(el)}</b><small>${L({es:'puedes presentar desde',en:'you can apply from'})}</small></div>
+   <div class="stat"><b>${days>0?days:'✓'}</b><small>${days>0?L({es:'días que faltan',en:'days to go'}):L({es:'¡ya cumples el tiempo!',en:'you meet the time!'})}</small></div></div>
+   ${days<=0?`<div class="notice mt" style="background:#E3F5EA;border-color:#B9E5C8">✅ ${L({es:'Ya cumples el plazo de residencia. Revisa que tu TIE siga vigente y empieza por los pasos 2 y 3.',en:'You meet the time requirement. Check your TIE is valid and start with steps 2 and 3.'})}</div>`
+     : days<=180?`<div class="notice mt">⏳ ${L({es:'Faltan menos de 6 meses: es buen momento para pedir apostillas, antecedentes y presentar el CCSE.',en:'Under 6 months to go: start apostilles, records and the CCSE now.'})}</div>`:''}
+   <p class="small muted mt">${L({es:'Cálculo orientativo: la residencia debe ser continuada y estar vigente el día que presentes.',en:'Estimate only: residence must be continuous and valid on the day you apply.'})}</p>`;
+}
+
 function renderModules(){
   renderPlaces();
   $('#ladder').innerHTML = LADDER.map((s,i)=>`<div class="step"><div class="sn" style="background:${s[3]}">${s[0]}</div><div><b>${i+1}. ${esc(L(s[1]))}</b><div class="small muted">${esc(L(s[2]))}</div></div></div>`).join('') + `<p class="small muted mt">${L({es:'De arriba hacia abajo: de lo más leve a lo más grave.',en:'Top to bottom: least to most serious.'})}</p>`;
   $('#papers-steps').innerHTML = PAPERS.map((s,i)=>`<div class="step"><div class="sn" style="background:${s[3]}">${s[0]}</div><div><b>${i+1}. ${esc(L(s[1]))}</b><div class="small muted">${esc(L(s[2]))}</div></div></div>`).join('');
   renderAcc($('#papers-acc'),PAPERSACC);
+  renderNation();
   renderAcc($('#health-acc'),HEALTHACC); renderAcc($('#work-acc'),WORKACC); renderPay();
   $('#redflags').innerHTML = REDFLAGS.map(r=>`<li>${esc(L(r))}</li>`).join('');
   renderAcc($('#housing-acc'),HOUSINGACC);
@@ -1780,6 +1945,7 @@ $('#j-to').addEventListener('keydown',e=>{ if(e.key==='Enter') planJourney(); })
 setInterval(tick,15000);
 loadHero(); loadWeather(); loadRates(); loadHols();
 $('#pl-q').addEventListener('input',renderPlaces);
+$('#nat-date').addEventListener('change',calcNation);
 ['pay-rate','pay-hours'].forEach(id=>$('#'+id).addEventListener('input',renderPay));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closePlace(); });
 setTimeout(()=>$('#splash').classList.add('off'),900);
